@@ -1,0 +1,53 @@
+# ============================================
+# Stage 1: Builder
+# ============================================
+FROM python:3.11-slim AS builder
+
+# 关键点 1: 路径必须与 Runtime 阶段完全一致
+WORKDIR /app
+
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl gcc g++ && rm -rf /var/lib/apt/lists/*
+
+RUN curl -LsSf https://uv.agentsmirror.com/install-cn.sh | sh && mv /root/.local/bin/uv /usr/local/bin/uv
+
+# 复制配置文件
+COPY pyproject.toml uv.lock README.md ./
+
+# 关键点 2: 复制源码后再进行 sync
+# 如果你只 sync 依赖而不安装项目，bin 目录下就不会生成 auperator 脚本
+COPY src ./src
+RUN uv sync --frozen
+
+# ============================================
+# Stage 2: Runtime
+# ============================================
+FROM python:3.11-slim
+
+# 关键点 3: 必须与 Builder 路径一致
+WORKDIR /app
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/app/.venv/bin:$PATH"
+
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl && \
+    # 下载并安装 Docker CLI 二进制文件，注意在 Compose 文件中挂载 /var/run/docker.sock
+    curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-27.3.1.tgz | \
+    tar zxvf - --strip-components=1 -C /usr/local/bin/ docker/docker && \
+    # ------------------------------------------
+    rm -rf /var/lib/apt/lists/*
+
+# 从 builder 复制整个 /app 目录（包含 .venv 和源码）
+COPY --from=builder /app /app
+
+EXPOSE 7000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:7000/health || exit 1
+
+ENTRYPOINT ["auperator"]
+CMD ["server"]
