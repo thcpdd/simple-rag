@@ -5,12 +5,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.core.database import engine
+from app.core.database import Base, engine
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """应用生命周期管理：启动时连接数据库，关闭时释放连接池。"""
+    """应用生命周期管理：启动时创建表结构，关闭时释放连接池。"""
+    # 导入所有模型，确保 Base.metadata 中包含完整的表结构
+    import app.models  # noqa: F401
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
     yield
     await engine.dispose()
 
