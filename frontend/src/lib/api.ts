@@ -119,6 +119,7 @@ function createSSEStream(
                   break
                 case 'done':
                   onDone()
+                  reader.cancel()  // 主动关闭连接，不需要等服务端关闭
                   break
               }
             } catch {

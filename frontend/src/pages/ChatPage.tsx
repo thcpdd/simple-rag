@@ -46,6 +46,9 @@ export default function ChatPage() {
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
 
+  // Prevent loadConversation from overwriting streaming state during local send
+  const streamingRef = useRef(false)
+
   // Source references
   const [showSources, setShowSources] = useState<Record<string, boolean>>({})
 
@@ -64,11 +67,13 @@ export default function ChatPage() {
     }
   }, [])
 
-  // Load conversation history when threadId changes
+  // Load conversation history when threadId changes (skip during local send)
   useEffect(() => {
     if (threadId) {
       setCurrentThreadId(threadId)
-      loadConversation(threadId)
+      if (!streamingRef.current) {
+        loadConversation(threadId)
+      }
     } else {
       setMessages([])
       setCurrentThreadId(null)
@@ -117,6 +122,8 @@ export default function ChatPage() {
       return
     }
 
+    streamingRef.current = true
+
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -136,11 +143,16 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, assistantMessage])
 
     try {
-      // 1. Invoke the chat
-      const invokeRes = await api.post<{ thread_id: string; session_id: number }>('/chat/invoke', { query })
+      // 1. Invoke the chat (pass thread_id when continuing existing conversation)
+      const invokeRes = await api.post<{ thread_id: string; session_id: number }>('/chat/invoke', {
+        query,
+        ...(currentThreadId ? { thread_id: currentThreadId } : {}),
+      })
       const tid = invokeRes.thread_id
       setCurrentThreadId(tid)
-      navigate(`/chat/${tid}`, { replace: true })
+      if (tid !== threadId) {
+        navigate(`/chat/${tid}`, { replace: true })
+      }
 
       // 2. Stream the response
       const controller = new AbortController()
@@ -164,15 +176,18 @@ export default function ChatPage() {
           )
         },
         (_err) => {
-          // error
+          streamingRef.current = false
+          setStreaming(false)
         },
         () => {
+          streamingRef.current = false
           setStreaming(false)
           loadSessions()
         },
         controller.signal,
       )
     } catch (err) {
+      streamingRef.current = false
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantId ? { ...m, content: m.content || '抱歉，发生了错误，请稍后重试。' } : m,

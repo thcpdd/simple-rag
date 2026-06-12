@@ -12,6 +12,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
@@ -35,29 +36,46 @@ async def invoke_chat(
     """发起一个 Agent 调用。
 
     创建后台任务运行 Agentic RAG，返回 thread_id 供流式消费和停止使用。
-    同时创建一条会话记录持久化到 MySQL。
+    续接已有会话时传入 thread_id，将复用该会话。
     """
     # 校验提问长度
     if len(req.query) > 500:
         raise HTTPException(status_code=400, detail="提问长度不能超过500字")
 
-    # 启动后台 Agent 任务
-    thread_id = await chat_task_manager.invoke(req.query)
+    if req.thread_id:
+        # 续接已有会话：校验会话属于当前用户，不创建新记录
+        stmt = select(SessionModel).where(
+            SessionModel.thread_id == req.thread_id,
+            SessionModel.user_id == current_user.id,
+        )
+        result = await db.execute(stmt)
+        session = result.scalar_one_or_none()
+        if session is None:
+            raise HTTPException(status_code=404, detail="会话不存在")
 
-    # 创建会话记录
-    session = SessionModel(
-        user_id=current_user.id,
-        thread_id=thread_id,
-        title=req.query[:100] if req.query else None,
-    )
-    db.add(session)
-    await db.commit()
-    await db.refresh(session)
+        thread_id = req.thread_id
+        await chat_task_manager.invoke(req.query, thread_id=thread_id)
+        logger.info(
+            "用户 %d 续接对话: session_id=%d, thread_id=%s",
+            current_user.id, session.id, thread_id,
+        )
+    else:
+        # 新建对话
+        thread_id = await chat_task_manager.invoke(req.query)
 
-    logger.info(
-        "用户 %d 发起对话: session_id=%d, thread_id=%s",
-        current_user.id, session.id, thread_id,
-    )
+        session = SessionModel(
+            user_id=current_user.id,
+            thread_id=thread_id,
+            title=req.query[:100] if req.query else None,
+        )
+        db.add(session)
+        await db.commit()
+        await db.refresh(session)
+
+        logger.info(
+            "用户 %d 发起对话: session_id=%d, thread_id=%s",
+            current_user.id, session.id, thread_id,
+        )
 
     return ChatInvokeResponse(thread_id=thread_id, session_id=session.id)
 

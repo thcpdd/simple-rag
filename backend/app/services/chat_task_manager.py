@@ -64,16 +64,24 @@ async def _get_agent():
 # ========== 公开 API ==========
 
 
-async def invoke(query: str) -> str:
+async def invoke(query: str, thread_id: Optional[str] = None) -> str:
     """发起一个 Agent 后台调用。
 
     Args:
         query: 用户提问文本
+        thread_id: 续接已有会话时的 thread_id（为 None 时自动生成）
 
     Returns:
         thread_id: 用于后续流式消费和停止的唯一线程ID
     """
-    thread_id = str(uuid4())
+    if thread_id is None:
+        thread_id = str(uuid4())
+    else:
+        # 续接已有会话时，清理可能残留的旧状态
+        _tasks.pop(thread_id, None)
+        _queues.pop(thread_id, None)
+        _errors.pop(thread_id, None)
+
     queue: asyncio.Queue = asyncio.Queue()
     _queues[thread_id] = queue
     _errors.pop(thread_id, None)
