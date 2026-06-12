@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.database import get_db
+from app.models.feedback import Feedback
 from app.models.session import Session as SessionModel
 from app.models.user import User
 from app.schemas.session import (
@@ -101,10 +102,13 @@ async def get_session_detail(
             if msg_type == "ai" and getattr(msg, "tool_calls", None):
                 continue
 
+            msg_id = getattr(msg, "id", "") or ""
+
             if msg_type == "tool":
                 tc_id = getattr(msg, "tool_call_id", "")
                 messages.append(
                     SessionMessageResponse(
+                        id=msg_id,
                         type="tool",
                         result=getattr(msg, "content", ""),
                         args=tool_call_args.get(tc_id, {}),
@@ -113,10 +117,26 @@ async def get_session_detail(
             else:
                 messages.append(
                     SessionMessageResponse(
+                        id=msg_id,
                         type=msg_type,
                         content=getattr(msg, "content", ""),
                     )
                 )
+
+    # 4. 查询当前用户对这些消息的评价
+    msg_ids = [m.id for m in messages if m.id]
+    if msg_ids:
+        fb_result = await db.execute(
+            select(Feedback).where(
+                Feedback.user_id == current_user.id,
+                Feedback.message_id.in_(msg_ids),
+            )
+        )
+        feedbacks = fb_result.scalars().all()
+        rating_map: dict[str, str] = {fb.message_id: fb.rating for fb in feedbacks}
+        for m in messages:
+            if m.id in rating_map:
+                m.user_rating = rating_map[m.id]
 
     return SessionDetailResponse(
         thread_id=thread_id,

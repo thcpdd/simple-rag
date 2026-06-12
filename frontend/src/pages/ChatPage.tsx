@@ -37,6 +37,7 @@ interface Message {
   id: string
   role: 'user' | 'assistant' | 'tool'
   content: string
+  messageId?: string  // LangGraph checkpointer 中的消息 UUID，用于反馈
   sources?: string[]
   toolArgs?: Record<string, unknown>
   toolResult?: string
@@ -65,6 +66,11 @@ export default function ChatPage() {
 
   // Delete confirmation state
   const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<string | null>(null)
+
+  // Feedback state: messageId -> user's rating
+  const [feedbackState, setFeedbackState] = useState<Record<string, 'like' | 'dislike'>>({})
+  // Feedback animation trigger
+  const [animFeedback, setAnimFeedback] = useState<Record<string, 'like' | 'dislike' | null>>({})
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -109,14 +115,22 @@ export default function ChatPage() {
       const msgs: Message[] = []
       for (const m of data.messages) {
         if (m.type === 'human') {
-          msgs.push({ id: `msg-${msgs.length}`, role: 'user', content: m.content ?? '' })
+          msgs.push({ id: `msg-${msgs.length}`, role: 'user', content: m.content ?? '', messageId: m.id })
         } else if (m.type === 'ai') {
-          msgs.push({ id: `msg-${msgs.length}`, role: 'assistant', content: m.content ?? '' })
+          msgs.push({ id: `msg-${msgs.length}`, role: 'assistant', content: m.content ?? '', messageId: m.id })
         } else if (m.type === 'tool') {
-          msgs.push({ id: `msg-${msgs.length}`, role: 'tool', content: '', toolArgs: m.args ?? undefined, toolResult: m.result ?? undefined })
+          msgs.push({ id: `msg-${msgs.length}`, role: 'tool', content: '', messageId: m.id, toolArgs: m.args ?? undefined, toolResult: m.result ?? undefined })
         }
       }
       setMessages(msgs)
+      // 从 user_rating 恢复反馈状态
+      const fb: Record<string, 'like' | 'dislike'> = {}
+      for (const m of data.messages) {
+        if (m.id && (m.user_rating === 'like' || m.user_rating === 'dislike')) {
+          fb[m.id] = m.user_rating
+        }
+      }
+      setFeedbackState(fb)
     } catch {
       navigate('/chat')
     }
@@ -199,6 +213,8 @@ export default function ChatPage() {
           streamingRef.current = false
           setStreaming(false)
           loadSessions()
+          // 流式结束后，获取新消息的 UUID 用于反馈
+          refreshMessageIds(tid)
         },
         controller.signal,
         (_name, args) => {
@@ -273,6 +289,59 @@ export default function ChatPage() {
       }
     } catch {
       alert('删除会话失败')
+    }
+  }
+
+  const handleFeedback = async (messageId: string, rating: 'like' | 'dislike') => {
+    const isCancel = feedbackState[messageId] === rating
+    try {
+      await api.post<{ id: number; message_id: string; rating: string }>('/feedback', {
+        message_id: messageId,
+        rating,
+      })
+      if (isCancel) {
+        setFeedbackState((prev) => {
+          const next = { ...prev }
+          delete next[messageId]
+          return next
+        })
+      } else {
+        setFeedbackState((prev) => ({ ...prev, [messageId]: rating }))
+      }
+      // 触发点赞/踩动画
+      if (!isCancel) {
+        setAnimFeedback((prev) => ({ ...prev, [messageId]: rating }))
+        setTimeout(() => {
+          setAnimFeedback((prev) => {
+            const next = { ...prev }
+            delete next[messageId]
+            return next
+          })
+        }, 350)
+      }
+    } catch {
+      // 静默失败
+    }
+  }
+
+  // 流式结束后，从 session detail 获取新消息的 UUID
+  const refreshMessageIds = async (tid: string) => {
+    try {
+      const data = await api.get<SessionDetailResponse>(`/session/${tid}`)
+      setMessages((prev) => {
+        let aiIdx = 0
+        return prev.map((msg) => {
+          if (msg.role === 'assistant' && !msg.messageId) {
+            const aiMsgs = data.messages.filter((m) => m.type === 'ai')
+            const id = aiMsgs[aiIdx]?.id
+            aiIdx++
+            return id ? { ...msg, messageId: id } : msg
+          }
+          return msg
+        })
+      })
+    } catch {
+      // 静默失败
     }
   }
 
@@ -477,12 +546,32 @@ export default function ChatPage() {
                           )}
 
                           {/* Feedback buttons */}
-                          {msg.content && !streaming && (
+                          {msg.content && !streaming && msg.messageId && (
                             <div className="flex items-center gap-1.5 px-1 animate-fade-in">
-                              <button className="p-1.5 rounded-md text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-all duration-200">
+                              <button
+                                onClick={() => handleFeedback(msg.messageId!, 'like')}
+                                className={`p-1.5 rounded-md transition-all duration-200 ${
+                                  feedbackState[msg.messageId!] === 'like'
+                                    ? 'text-blue-500 bg-blue-50'
+                                    : 'text-slate-300 hover:text-blue-500 hover:bg-blue-50'
+                                } ${
+                                  animFeedback[msg.messageId!] === 'like' ? 'animate-feedback-pop' : ''
+                                }`}
+                                title="有帮助"
+                              >
                                 <ThumbsUp className="h-3.5 w-3.5" />
                               </button>
-                              <button className="p-1.5 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all duration-200">
+                              <button
+                                onClick={() => handleFeedback(msg.messageId!, 'dislike')}
+                                className={`p-1.5 rounded-md transition-all duration-200 ${
+                                  feedbackState[msg.messageId!] === 'dislike'
+                                    ? 'text-red-500 bg-red-50'
+                                    : 'text-slate-300 hover:text-red-500 hover:bg-red-50'
+                                } ${
+                                  animFeedback[msg.messageId!] === 'dislike' ? 'animate-feedback-pop' : ''
+                                }`}
+                                title="没帮助"
+                              >
                                 <ThumbsDown className="h-3.5 w-3.5" />
                               </button>
                             </div>

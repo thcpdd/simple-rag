@@ -27,10 +27,12 @@ class SessionMessageResponse(BaseModel):
     - human/ai 消息: type + content
     - tool 消息: type + result + args
     """
+    id: str
     type: str = Field(..., description="消息类型: human / ai / tool")
     content: str | None = Field(default=None, description="消息内容（human/ai）")
     result: str | None = Field(default=None, description="工具调用结果（tool）")
     args: dict | None = Field(default=None, description="工具调用参数（tool）")
+    user_rating: str | None = Field(default=None, description="当前用户对该消息的评价: like/dislike")
 
 
 class SessionDetailResponse(BaseModel):

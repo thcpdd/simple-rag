@@ -181,10 +181,12 @@ export interface SessionListResponse {
 }
 
 export interface SessionMessageResponse {
+  id: string
   type: 'human' | 'ai' | 'tool'
   content: string | null
   result: string | null
   args: Record<string, unknown> | null
+  user_rating: 'like' | 'dislike' | null
 }
 
 export interface SessionDetailResponse {
@@ -232,4 +234,24 @@ export interface LoginRequest {
 
 export interface ChatInvokeRequest {
   query: string
+}
+
+export interface FeedbackRequest {
+  message_id: string
+  rating: 'like' | 'dislike'
+  comment?: string
+}
+
+export interface FeedbackResponse {
+  id: number
+  message_id: string
+  rating: string
+  comment: string | null
+  created_at: string
+}
+
+export interface FeedbackSummaryResponse {
+  message_id: string
+  like_count: number
+  dislike_count: number
 }
