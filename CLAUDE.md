@@ -5,26 +5,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Run the FastAPI dev server (from backend/)
+# ─── Backend (uv) ───
 cd backend && uv run uvicorn main:app --reload --host 0.0.0.0 --port 7500
+cd backend && uv run python main.py          # alternative
+cd backend && uv sync                        # install/sync deps
+cd backend && uv run ruff check app/         # lint
+cd backend && uv run python -m app.scripts.init_kb        # init KB (parse→embed→store)
+cd backend && uv run python -m app.scripts.test_retrieval  # test vector search
 
-# Or use main.py directly:
-cd backend && uv run python main.py
-
-# Initialize knowledge base (parse all docs in knowledges/ → embed → Qdrant + MySQL)
-cd backend && uv run python -m app.scripts.init_kb
-
-# Interactive retrieval test (requires init_kb first)
-cd backend && uv run python -m app.scripts.test_retrieval
-
-# Install / sync dependencies
-cd backend && uv sync
-
-# Activate venv
-source backend/.venv/bin/activate
-
-# Lint with ruff (if installed)
-cd backend && uv run ruff check app/
+# ─── Frontend (pnpm) ───
+cd frontend && pnpm dev       # Vite dev server (port 5173, proxies /api → :7500)
+cd frontend && pnpm build     # tsc + vite build → dist/
+cd frontend && pnpm lint      # ESLint
 ```
 
 ## Security Warning
@@ -35,48 +27,71 @@ The `.env` file contains live API keys and database credentials — it is gitign
 
 ```
 simple-rag/
-├── backend/
+├── backend/                  # FastAPI + LangGraph backend (Python, uv)
 │   ├── app/
-│   │   ├── agents/            # LangGraph agent definitions
-│   │   │   ├── builder.py         # build_agent(): LLM + retrieval_tool + checkpointer
-│   │   │   └── retrieval_tool.py  # @tool wrapping embed() + vector_store.search()
-│   │   ├── api/               # FastAPI route handlers
-│   │   │   ├── auth.py            # POST /auth/register, /auth/login, GET /auth/me
-│   │   │   ├── chat.py            # POST /chat/invoke, GET /chat/stream/{id}, POST /chat/stop
-│   │   │   ├── knowledge.py       # GET/POST/DELETE /knowledge/*
-│   │   │   ├── session.py         # GET /session/list, GET /session/{thread_id}
-│   │   │   └── deps.py            # get_current_user() — HTTP Bearer JWT dependency
-│   │   ├── core/              # Infrastructure layer
-│   │   │   ├── config.py          # pydantic-settings (.env based)
-│   │   │   ├── database.py        # SQLAlchemy async engine + session (MySQL)
-│   │   │   └── security.py        # bcrypt hash, JWT create/decode
-│   │   ├── models/            # SQLAlchemy ORM models
-│   │   │   ├── user.py            # users table
-│   │   │   ├── knowledge_doc.py   # knowledge_docs table (file_path, md5 hash, status)
-│   │   │   └── session.py         # sessions table (links user_id ↔ thread_id)
-│   │   ├── schemas/           # Pydantic request/response models per API module
+│   │   ├── agents/               # LangGraph agent definitions
+│   │   │   ├── builder.py            # build_agent(): LLM + retrieval_tool + checkpointer
+│   │   │   └── retrieval_tool.py     # @tool wrapping embed() + vector_store.search()
+│   │   ├── api/                 # FastAPI route handlers
+│   │   │   ├── auth.py              # POST /auth/register, /auth/login, GET /auth/me
+│   │   │   ├── chat.py              # POST /chat/invoke, GET /chat/stream/{id}, POST /chat/stop
+│   │   │   ├── knowledge.py         # GET/POST/DELETE /knowledge/*
+│   │   │   ├── session.py           # GET /session/list, GET /session/{thread_id}
+│   │   │   └── deps.py              # get_current_user() — HTTP Bearer JWT dependency
+│   │   ├── core/                # Infrastructure layer
+│   │   │   ├── config.py            # pydantic-settings (.env based)
+│   │   │   ├── database.py          # SQLAlchemy async engine + session (MySQL)
+│   │   │   └── security.py          # bcrypt hash, JWT create/decode
+│   │   ├── models/              # SQLAlchemy ORM models
+│   │   │   ├── user.py              # users table
+│   │   │   ├── knowledge_doc.py     # knowledge_docs table (file_path, md5 hash, status)
+│   │   │   └── session.py           # sessions table (links user_id ↔ thread_id)
+│   │   ├── schemas/             # Pydantic request/response models per API module
 │   │   │   ├── user.py
 │   │   │   ├── knowledge.py
 │   │   │   ├── chat.py
 │   │   │   └── session.py
-│   │   ├── scripts/           # CLI utilities (run via -m)
-│   │   │   ├── init_kb.py         # Batch init: scan → dedup → parse → embed → store
-│   │   │   └── test_retrieval.py  # Interactive CLI for testing vector search
-│   │   ├── services/          # Business logic layer
-│   │   │   ├── user.py            # register / login / get_user_by_id
-│   │   │   ├── knowledge.py       # process_document() / delete_document() pipeline
-│   │   │   ├── document_parser.py # parse_document() dispatcher (.md vs .txt)
-│   │   │   ├── text_splitter.py   # MarkdownHeaderTextSplitter + RecursiveCharacterTextSplitter
-│   │   │   ├── embedding.py       # OpenAI-compatible embedding (single + batch, retry)
-│   │   │   ├── vector_store.py    # Qdrant CRUD (ensure_collection, upsert, search, delete)
-│   │   │   └── chat_task_manager.py #  Agent task lifecycle: invoke/stream/stop asyncio management
+│   │   ├── scripts/             # CLI utilities (run via -m)
+│   │   │   ├── init_kb.py           # Batch init: scan → dedup → parse → embed → store
+│   │   │   └── test_retrieval.py    # Interactive CLI for testing vector search
+│   │   ├── services/            # Business logic layer
+│   │   │   ├── user.py              # register / login / get_user_by_id
+│   │   │   ├── knowledge.py         # process_document() / delete_document() pipeline
+│   │   │   ├── document_parser.py   # parse_document() dispatcher (.md vs .txt)
+│   │   │   ├── text_splitter.py     # MarkdownHeaderTextSplitter + RecursiveCharacterTextSplitter
+│   │   │   ├── embedding.py         # OpenAI-compatible embedding (single + batch, retry)
+│   │   │   ├── vector_store.py      # Qdrant CRUD (ensure_collection, upsert, search, delete)
+│   │   │   └── chat_task_manager.py # Agent task lifecycle: invoke/stream/stop asyncio management
 │   │   └── utils/
-│   │       └── logging.py         # Colored console + file logging, unified uvicorn config
-│   ├── main.py                # FastAPI entry: lifespan (auto-create tables), CORS, router registration
-│   ├── pyproject.toml         # Python deps managed by uv
-│   └── .env.example           # Required env vars (copy to .env)
-└── knowledges/                # Knowledge base documents (the "source of truth")
-    └── auperator/             # Product docs for the Auperator intelligent ops system
+│   │       └── logging.py           # Colored console + file logging, unified uvicorn config
+│   ├── main.py                 # FastAPI entry: lifespan (auto-create tables), CORS, router registration
+│   ├── pyproject.toml          # Python deps managed by uv
+│   └── .env.example            # Required env vars (copy to .env)
+├── frontend/                  # Vite + React + TypeScript SPA (pnpm)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── auth/              # ProtectedRoute (JWT guard in localStorage)
+│   │   │   ├── chat/              # Chat page components
+│   │   │   ├── knowledge/         # Knowledge base management components
+│   │   │   └── ui/                # shadcn/ui primitives (button, dialog, card, etc.)
+│   │   ├── layouts/
+│   │   │   └── AppLayout.tsx      # Sidebar + Outlet, nav links, user dropdown
+│   │   ├── pages/
+│   │   │   ├── ChatPage.tsx       # Chat with SSE streaming
+│   │   │   ├── KnowledgePage.tsx  # Document upload & management
+│   │   │   ├── LoginPage.tsx
+│   │   │   └── RegisterPage.tsx
+│   │   ├── lib/
+│   │   │   ├── api.ts             # API client (fetch wrapper + SSE stream helper + types)
+│   │   │   └── utils.ts           # Tailwind class merge utility
+│   │   ├── App.tsx                # Route definitions (react-router-dom)
+│   │   ├── main.tsx               # Entry point
+│   │   └── index.css              # Tailwind v4 import
+│   ├── vite.config.ts          # Tailwind + React plugins, /api proxy → :7500, @ alias
+│   ├── package.json
+│   └── pnpm-lock.yaml
+└── knowledges/                 # Knowledge base source documents
+    └── auperator/              # Product docs for Auperator intelligent ops system
 ```
 
 ## Architecture
@@ -120,6 +135,21 @@ POST /chat/stop
 - `GET /session/list` returns session metadata from MySQL.
 - `GET /session/{thread_id}` recovers full message history from the checkpointer.
 
+### Frontend Architecture (React SPA)
+
+```
+[Browser] ← react-router-dom → [Pages] → [api.ts fetch/SSE] → Vite proxy → FastAPI
+                                       ↓
+                              localStorage (JWT token, user info)
+```
+
+- **Routing**: `react-router-dom v7` — public routes (`/login`, `/register`) and protected routes (`/chat`, `/knowledge`) wrapped in `<ProtectedRoute>` which checks `localStorage.getItem('access_token')`.
+- **Auth flow**: Login/Register → backend returns JWT → stored in localStorage → attached as `Authorization: Bearer <token>` header on every request via `api.ts`.
+- **API client** (`lib/api.ts`): Generic `request<T>()` wrapper around `fetch()` with automatic JWT injection and JSON parsing. Separate `createSSEStream()` for SSE-based chat streaming (token/sources/error/done events).
+- **Chat streaming**: `POST /chat/invoke` returns `{thread_id}` → `GET /chat/stream/{thread_id}` via SSE → renders tokens incrementally via `useState` + `useEffect` with `AbortController` for stop support.
+- **UI components**: shadcn/ui primitives (Radix-based) + Tailwind CSS v4 + lucide-react icons. `@` path alias maps to `src/`.
+- **Dev proxy**: Vite dev server proxies `/api/*` → `http://127.0.0.1:7500` (strips `/api` prefix). No CORS issues in development.
+
 ### Agent Building
 
 `agents/builder.py` uses `langchain.agents.create_agent()` to construct a LangGraph agent with:
@@ -139,6 +169,13 @@ POST /chat/stop
 - **Markdown chunking**: Two-pass — first by `##`/`###` headers (preserving section metadata), then recursive split for long sections (chunk_size=400, overlap=50).
 - **Embedding batch via gather**: `embed_batch()` uses `asyncio.gather` with per-item retry.
 - **No tests**: The project currently has no test suite.
+
+### Full-Stack Development Workflow
+
+1. Start backend: `cd backend && uv run uvicorn main:app --reload --host 0.0.0.0 --port 7500`
+2. Start frontend (separate terminal): `cd frontend && pnpm dev` (port 5173)
+3. Frontend proxies `/api/*` to backend, so open `http://localhost:5173` in browser.
+4. To initialize knowledge base: `cd backend && uv run python -m app.scripts.init_kb`
 
 ### Dependencies
 
