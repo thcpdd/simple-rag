@@ -83,14 +83,40 @@ async def get_session_detail(
     # 3. 解析消息列表
     messages: list[SessionMessageResponse] = []
     if state and state.values and "messages" in state.values:
-        for msg in state.values["messages"]:
-            messages.append(
-                SessionMessageResponse(
-                    id=getattr(msg, "id", ""),
-                    role=getattr(msg, "type", "unknown"),
-                    content=getattr(msg, "content", ""),
+        raw_messages = state.values["messages"]
+
+        # 第一遍：收集所有工具调用 ID → 参数 的映射
+        tool_call_args: dict[str, dict] = {}
+        for msg in raw_messages:
+            tcs = getattr(msg, "tool_calls", None)
+            if tcs:
+                for tc in tcs:
+                    tool_call_args[tc["id"]] = tc.get("args", {})
+
+        # 第二遍：生成消息列表
+        for msg in raw_messages:
+            msg_type = getattr(msg, "type", "unknown")
+
+            # 跳过 AI 工具调用消息（content 为空，仅有 tool_calls）
+            if msg_type == "ai" and getattr(msg, "tool_calls", None):
+                continue
+
+            if msg_type == "tool":
+                tc_id = getattr(msg, "tool_call_id", "")
+                messages.append(
+                    SessionMessageResponse(
+                        type="tool",
+                        result=getattr(msg, "content", ""),
+                        args=tool_call_args.get(tc_id, {}),
+                    )
                 )
-            )
+            else:
+                messages.append(
+                    SessionMessageResponse(
+                        type=msg_type,
+                        content=getattr(msg, "content", ""),
+                    )
+                )
 
     return SessionDetailResponse(
         thread_id=thread_id,

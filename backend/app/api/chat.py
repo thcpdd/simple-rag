@@ -91,8 +91,10 @@ async def stream_chat(
             async for event_type, data in chat_task_manager.stream(thread_id):
                 if event_type == "token":
                     yield f"data: {json.dumps({'type': 'token', 'content': data}, ensure_ascii=False)}\n\n"
-                elif event_type == "sources":
-                    yield f"data: {json.dumps({'type': 'sources', 'sources': data}, ensure_ascii=False)}\n\n"
+                elif event_type == "tool_call":
+                    yield f"data: {json.dumps({'type': 'tool_call', 'name': data['name'], 'args': data['args']}, ensure_ascii=False)}\n\n"
+                elif event_type == "tool_result":
+                    yield f"data: {json.dumps({'type': 'tool_result', 'name': data['name'], 'result': data['result']}, ensure_ascii=False)}\n\n"
                 elif event_type == "error":
                     yield f"data: {json.dumps({'type': 'error', 'message': data}, ensure_ascii=False)}\n\n"
                     return

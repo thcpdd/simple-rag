@@ -204,10 +204,8 @@ async def _run_agent(agent, thread_id: str, query: str, queue: asyncio.Queue) ->
         }
         input_msg = {"messages": [HumanMessage(content=query)]}
 
-        sources: list[str] = []
-
         async for event in agent.astream_events(input_msg, config, version="v2"):
-            kind = event.get("event")
+            kind = event.get("kind") or event.get("event")
 
             if kind == "on_chat_model_stream":
                 chunk = event["data"].get("chunk")
@@ -216,19 +214,26 @@ async def _run_agent(agent, thread_id: str, query: str, queue: asyncio.Queue) ->
                     if content:
                         await queue.put(("token", content))
 
+            elif kind == "on_tool_start":
+                name = event.get("name", "unknown_tool")
+                raw_input = event["data"].get("input", "")
+                # retrieve_knowledge(query: str) → input 是字符串
+                if isinstance(raw_input, str):
+                    args = {"query": raw_input}
+                elif isinstance(raw_input, dict):
+                    args = raw_input
+                else:
+                    args = {"input": str(raw_input)}
+                await queue.put(("tool_call", {"name": name, "args": args}))
+
             elif kind == "on_tool_end":
+                name = event.get("name", "unknown_tool")
                 output = event["data"].get("output", "")
-                # output 可能是 ToolMessage 对象，提取其文本内容
                 if hasattr(output, "content"):
                     text = output.content
                 else:
                     text = str(output)
-                if text:
-                    sources.append(text)
-
-        # 流结束后发送知识来源
-        if sources:
-            await queue.put(("sources", sources))
+                await queue.put(("tool_result", {"name": name, "result": text or ""}))
 
         await queue.put(("done", None))
         logger.info("Chat 任务完成: thread_id=%s", thread_id)

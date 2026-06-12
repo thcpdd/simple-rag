@@ -35,9 +35,11 @@ import remarkGfm from 'remark-gfm'
 
 interface Message {
   id: string
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'tool'
   content: string
   sources?: string[]
+  toolArgs?: Record<string, unknown>
+  toolResult?: string
 }
 
 export default function ChatPage() {
@@ -106,10 +108,12 @@ export default function ChatPage() {
       const data = await api.get<SessionDetailResponse>(`/session/${tid}`)
       const msgs: Message[] = []
       for (const m of data.messages) {
-        if (m.role === 'human') {
-          msgs.push({ id: m.id, role: 'user', content: m.content })
-        } else if (m.role === 'ai') {
-          msgs.push({ id: m.id, role: 'assistant', content: m.content })
+        if (m.type === 'human') {
+          msgs.push({ id: `msg-${msgs.length}`, role: 'user', content: m.content ?? '' })
+        } else if (m.type === 'ai') {
+          msgs.push({ id: `msg-${msgs.length}`, role: 'assistant', content: m.content ?? '' })
+        } else if (m.type === 'tool') {
+          msgs.push({ id: `msg-${msgs.length}`, role: 'tool', content: '', toolArgs: m.args ?? undefined, toolResult: m.result ?? undefined })
         }
       }
       setMessages(msgs)
@@ -197,6 +201,24 @@ export default function ChatPage() {
           loadSessions()
         },
         controller.signal,
+        (_name, args) => {
+          // tool_call: insert a tool message with args
+          const toolId = `tool-${Date.now()}`
+          setMessages((prev) => [
+            ...prev,
+            { id: toolId, role: 'tool', content: '', toolArgs: args },
+          ])
+        },
+        (_name, result) => {
+          // tool_result: update the last tool message with the result
+          setMessages((prev) => {
+            const idx = prev.findLastIndex((m) => m.role === 'tool' && !m.toolResult)
+            if (idx === -1) return prev
+            const updated = [...prev]
+            updated[idx] = { ...updated[idx], toolResult: result }
+            return updated
+          })
+        },
       )
     } catch (err) {
       streamingRef.current = false
@@ -362,7 +384,34 @@ export default function ChatPage() {
                       </div>
                     )}
 
-                    <div className={`${msg.role === 'user' ? 'max-w-[78%]' : 'flex-1 min-w-0'} ${msg.role === 'user' ? 'order-1' : ''}`}>
+                    {msg.role === 'tool' && (
+                      <div className="w-full my-1">
+                        <details className="group cursor-pointer">
+                          <summary className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 transition-colors px-1 py-0.5 rounded-md hover:bg-slate-50 w-fit select-none">
+                            <Search className="h-3 w-3" />
+                            <span>检索知识库</span>
+                            <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180" />
+                          </summary>
+                          <div className="mt-2 space-y-2 text-xs">
+                            {msg.toolArgs && (
+                              <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-2.5">
+                                <div className="font-medium text-blue-600 mb-0.5">查询</div>
+                                <div className="text-slate-600">{JSON.stringify(msg.toolArgs)}</div>
+                              </div>
+                            )}
+                            {msg.toolResult && (
+                              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
+                                <div className="font-medium text-slate-500 mb-0.5">检索结果</div>
+                                <div className="text-slate-400 whitespace-pre-wrap line-clamp-6 hover:line-clamp-none transition-all">{msg.toolResult}</div>
+                              </div>
+                            )}
+                          </div>
+                        </details>
+                      </div>
+                    )}
+
+                    {msg.role !== 'tool' && (
+                    <div className={`${msg.role === 'user' ? 'max-w-[78%] order-1' : 'flex-1 min-w-0'}`}>
                       {msg.role === 'user' ? (
                         <div className="flex items-end gap-2">
                           <div className="bg-gradient-to-br from-blue-600 to-blue-500 text-white rounded-2xl rounded-br-sm px-4 py-2.5 text-sm shadow-sm shadow-blue-200">
@@ -441,6 +490,7 @@ export default function ChatPage() {
                         </div>
                       )}
                     </div>
+                    )}
                   </div>
                 ))}
                 <div ref={messagesEndRef} />

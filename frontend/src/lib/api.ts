@@ -71,6 +71,8 @@ function createSSEStream(
   onError: (message: string) => void,
   onDone: () => void,
   signal?: AbortSignal,
+  onToolCall?: (name: string, args: Record<string, unknown>) => void,
+  onToolResult?: (name: string, result: string) => void,
 ): () => void {
   const token = localStorage.getItem('access_token')
 
@@ -110,6 +112,12 @@ function createSSEStream(
               switch (data.type) {
                 case 'token':
                   onToken(data.content)
+                  break
+                case 'tool_call':
+                  onToolCall?.(data.name, data.args)
+                  break
+                case 'tool_result':
+                  onToolResult?.(data.name, data.result)
                   break
                 case 'sources':
                   onSources(data.sources || [])
@@ -173,9 +181,10 @@ export interface SessionListResponse {
 }
 
 export interface SessionMessageResponse {
-  id: string
-  role: 'human' | 'ai' | 'tool' | 'unknown'
-  content: string
+  type: 'human' | 'ai' | 'tool'
+  content: string | null
+  result: string | null
+  args: Record<string, unknown> | null
 }
 
 export interface SessionDetailResponse {

@@ -22,10 +22,15 @@ class SessionListResponse(BaseModel):
 
 
 class SessionMessageResponse(BaseModel):
-    """会话中的单条消息。"""
-    id: str = Field(default="", description="消息ID")
-    role: str = Field(..., description="消息角色: human / ai / tool")
-    content: str = Field(default="", description="消息内容")
+    """会话中的单条消息。
+
+    - human/ai 消息: type + content
+    - tool 消息: type + result + args
+    """
+    type: str = Field(..., description="消息类型: human / ai / tool")
+    content: str | None = Field(default=None, description="消息内容（human/ai）")
+    result: str | None = Field(default=None, description="工具调用结果（tool）")
+    args: dict | None = Field(default=None, description="工具调用参数（tool）")
 
 
 class SessionDetailResponse(BaseModel):
