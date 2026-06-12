@@ -16,6 +16,18 @@ class ApiError extends Error {
   }
 }
 
+function handleUnauthorized() {
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('user_email')
+  // Only redirect if not already on login/register page
+  if (
+    window.location.pathname !== '/login' &&
+    window.location.pathname !== '/register'
+  ) {
+    window.location.href = '/login'
+  }
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, headers = {}, isFormData = false } = options
 
@@ -48,16 +60,19 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   const contentType = response.headers.get('content-type')
-  if (contentType && contentType.includes('application/json')) {
-    const data = await response.json()
-    if (!response.ok) {
-      throw new ApiError(data.detail || data.message || '请求失败', response.status)
-    }
-    return data as T
-  }
 
   if (!response.ok) {
-    throw new ApiError('请求失败', response.status)
+    if (response.status === 401) {
+      handleUnauthorized()
+    }
+    const data = contentType && contentType.includes('application/json')
+      ? await response.json()
+      : null
+    throw new ApiError(data?.detail || data?.message || '请求失败', response.status)
+  }
+
+  if (contentType && contentType.includes('application/json')) {
+    return (await response.json()) as T
   }
 
   return undefined as T
@@ -83,6 +98,9 @@ function createSSEStream(
     signal,
   }).then(async (response) => {
     if (!response.ok) {
+      if (response.status === 401) {
+        handleUnauthorized()
+      }
       onError(`HTTP ${response.status}: 请求失败`)
       return
     }
