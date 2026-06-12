@@ -69,107 +69,111 @@ async def main() -> None:
     logger.info("连接 Qdrant...")
     await ensure_collection()
 
-    # 3. 扫描文档
-    files = _discover_documents()
-    if not files:
-        logger.warning("在 %s 下未找到 .md / .txt 文件", KNOWLEDGE_BASE_DIR)
-        return
+    try:
+        # 3. 扫描文档
+        files = _discover_documents()
+        if not files:
+            logger.warning("在 %s 下未找到 .md / .txt 文件", KNOWLEDGE_BASE_DIR)
+            return
 
-    logger.info("扫描到 %d 个文档文件:", len(files))
-    for f in files:
-        logger.info("  - %s", f.relative_to(KNOWLEDGE_BASE_DIR))
+        logger.info("扫描到 %d 个文档文件:", len(files))
+        for f in files:
+            logger.info("  - %s", f.relative_to(KNOWLEDGE_BASE_DIR))
 
-    # 4. 查询 MySQL 已有记录的 content_hash，用于去重
-    async with async_session() as db:
-        result = await db.execute(select(KnowledgeDoc.content_hash))
-        existing_hashes = {row[0] for row in result.fetchall()}
-    logger.info("MySQL 中已有 %d 条知识库记录", len(existing_hashes))
+        # 4. 查询 MySQL 已有记录的 content_hash，用于去重
+        async with async_session() as db:
+            result = await db.execute(select(KnowledgeDoc.content_hash))
+            existing_hashes = {row[0] for row in result.fetchall()}
+        logger.info("MySQL 中已有 %d 条知识库记录", len(existing_hashes))
 
-    # 5. 逐文件处理
-    total_new_files = 0
-    total_chunks: list = []
-    file_records: list[KnowledgeDoc] = []
+        # 5. 逐文件处理
+        total_new_files = 0
+        total_chunks: list = []
+        file_records: list[KnowledgeDoc] = []
 
-    for file_path in files:
-        rel_path = str(file_path.relative_to(KNOWLEDGE_BASE_DIR))
-        md5 = _compute_md5(file_path)
+        for file_path in files:
+            rel_path = str(file_path.relative_to(KNOWLEDGE_BASE_DIR))
+            md5 = _compute_md5(file_path)
 
-        # 去重检查
-        if md5 in existing_hashes:
-            logger.info("跳过（已存在）: %s", rel_path)
-            continue
+            # 去重检查
+            if md5 in existing_hashes:
+                logger.info("跳过（已存在）: %s", rel_path)
+                continue
 
-        # 解析文档
-        try:
-            chunks = parse_document(str(file_path))
-        except Exception as e:
-            logger.error("解析失败 %s: %s", rel_path, e)
-            # 写入失败记录
+            # 解析文档
+            try:
+                chunks = parse_document(str(file_path))
+            except Exception as e:
+                logger.error("解析失败 %s: %s", rel_path, e)
+                # 写入失败记录
+                file_records.append(
+                    KnowledgeDoc(
+                        file_path=rel_path,
+                        original_filename=file_path.name,
+                        file_size=file_path.stat().st_size,
+                        content_hash=md5,
+                        status="failed",
+                        error_message=str(e),
+                    )
+                )
+                continue
+
+            # 覆盖 metadata.source 为相对路径（替代原来的绝对路径）
+            for chunk in chunks:
+                chunk.metadata["source"] = rel_path
+
+            total_chunks.extend(chunks)
+            total_new_files += 1
+
+            # 准备 MySQL 记录（先缓存，写入 Qdrant 后再持久化）
             file_records.append(
                 KnowledgeDoc(
                     file_path=rel_path,
                     original_filename=file_path.name,
                     file_size=file_path.stat().st_size,
                     content_hash=md5,
-                    status="failed",
-                    error_message=str(e),
+                    status="processing",
+                    chunk_count=len(chunks),
                 )
             )
-            continue
 
-        # 覆盖 metadata.source 为相对路径（替代原来的绝对路径）
-        for chunk in chunks:
-            chunk.metadata["source"] = rel_path
+            logger.info("解析 %s → %d chunks", rel_path, len(chunks))
 
-        total_chunks.extend(chunks)
-        total_new_files += 1
+        # 6. 如果没有新文件，提前结束
+        if not total_chunks:
+            logger.info("没有新文件需要处理，所有文档已是最新。")
+            return
 
-        # 准备 MySQL 记录（先缓存，写入 Qdrant 后再持久化）
-        file_records.append(
-            KnowledgeDoc(
-                file_path=rel_path,
-                original_filename=file_path.name,
-                file_size=file_path.stat().st_size,
-                content_hash=md5,
-                status="processing",
-                chunk_count=len(chunks),
-            )
-        )
+        logger.info("新文件 %d 个，共 %d 个文档分块", total_new_files, len(total_chunks))
 
-        logger.info("解析 %s → %d chunks", rel_path, len(chunks))
+        # 7. 批量向量化
+        logger.info("向量化中（共 %d 条）...", len(total_chunks))
+        texts = [c.page_content for c in total_chunks]
+        embeddings = await embed_batch(texts)
+        logger.info("向量化完成")
 
-    # 6. 如果没有新文件，提前结束
-    if not total_chunks:
-        logger.info("没有新文件需要处理，所有文档已是最新。")
-        return
+        # 8. 写入 Qdrant
+        vector_count = await upsert(total_chunks, embeddings)
 
-    logger.info("新文件 %d 个，共 %d 个文档分块", total_new_files, len(total_chunks))
+        # 9. 更新 MySQL 记录
+        async with async_session() as db:
+            for rec in file_records:
+                if rec.status == "processing":
+                    rec.status = "ready"
+                db.add(rec)
+            await db.commit()
 
-    # 7. 批量向量化
-    logger.info("向量化中（共 %d 条）...", len(total_chunks))
-    texts = [c.page_content for c in total_chunks]
-    embeddings = await embed_batch(texts)
-    logger.info("向量化完成")
-
-    # 8. 写入 Qdrant
-    vector_count = await upsert(total_chunks, embeddings)
-
-    # 9. 更新 MySQL 记录
-    async with async_session() as db:
-        for rec in file_records:
-            if rec.status == "processing":
-                rec.status = "ready"
-            db.add(rec)
-        await db.commit()
-
-    elapsed = time.time() - start_time
-    logger.info("=" * 50)
-    logger.info("知识库初始化完成!")
-    logger.info("  新处理文件: %d", total_new_files)
-    logger.info("  写入向量数: %d", vector_count)
-    logger.info("  MySQL 记录数: %d", len([r for r in file_records if r.status == "ready"]))
-    logger.info("  总耗时: %.2fs", elapsed)
-    logger.info("=" * 50)
+        elapsed = time.time() - start_time
+        logger.info("=" * 50)
+        logger.info("知识库初始化完成!")
+        logger.info("  新处理文件: %d", total_new_files)
+        logger.info("  写入向量数: %d", vector_count)
+        logger.info("  MySQL 记录数: %d", len([r for r in file_records if r.status == "ready"]))
+        logger.info("  总耗时: %.2fs", elapsed)
+        logger.info("=" * 50)
+    finally:
+        # 关闭数据库连接池，防止事件循环关闭后 aiomysql 报错
+        await engine.dispose()
 
 
 if __name__ == "__main__":
