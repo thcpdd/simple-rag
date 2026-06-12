@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     qdrant_port: int = Field(default=6333)
     qdrant_api_key: str = Field(default="")
     qdrant_collection_name: str = Field(default="simplerag")
+    qdrant_top_k: int = Field(default=5, description="向量检索返回的最大结果数")
+    qdrant_score_threshold: float = Field(
+        default=0.7, description="向量检索相似度阈值，低于此值的结果被过滤"
+    )
 
     # ========== 对话模型 (OpenAI 兼容) ==========
     openai_model: str = Field(default="gpt-4o-mini")

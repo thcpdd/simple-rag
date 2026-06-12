@@ -45,18 +45,18 @@ CREATE TABLE IF NOT EXISTS sessions (
 -- -----------------------------------------------------------
 CREATE TABLE IF NOT EXISTS knowledge_docs (
     id                INT           AUTO_INCREMENT PRIMARY KEY COMMENT '文档ID',
-    user_id           INT           NOT NULL COMMENT '上传者',
-    filename          VARCHAR(255)  NOT NULL COMMENT '存储文件名',
-    original_filename VARCHAR(255)  NOT NULL COMMENT '原始文件名',
+    file_path         VARCHAR(500)  NOT NULL COMMENT 'knowledges/ 下的相对路径，如 auperator/README.md',
+    original_filename VARCHAR(255)  NOT NULL COMMENT '原始文件名，前端展示用',
     file_size         INT           NOT NULL DEFAULT 0 COMMENT '文件大小（字节）',
+    content_hash      VARCHAR(64)   NOT NULL COMMENT '文件 MD5，用于重复检测',
     status            VARCHAR(20)   NOT NULL DEFAULT 'processing' COMMENT '处理状态：processing / ready / failed',
     chunk_count       INT           NOT NULL DEFAULT 0 COMMENT '分块数量',
     error_message     TEXT          NULL COMMENT '失败时的错误信息',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '上传时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
 
-    INDEX idx_user_id (user_id),
-    INDEX idx_status (status),
-    CONSTRAINT fk_knowledge_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    UNIQUE INDEX idx_file_path (file_path),
+    INDEX idx_content_hash (content_hash),
+    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='知识库文档表';

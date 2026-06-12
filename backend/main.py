@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.api.auth import router as auth_router
+from app.api.knowledge import router as knowledge_router
 
 
 @asynccontextmanager
@@ -38,6 +39,7 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(auth_router)
+app.include_router(knowledge_router)
 
 if __name__ == "__main__":
     import uvicorn
