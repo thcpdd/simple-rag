@@ -78,7 +78,7 @@ async def main() -> None:
         try:
             print("\n  正在检索...", end="", flush=True)
             query_vector = await embed(query)
-            results = await search(query_vector)
+            results = await search(query_vector, query_text=query)
             print("\r" + " " * 20 + "\r", end="")
 
             _print_result(results)

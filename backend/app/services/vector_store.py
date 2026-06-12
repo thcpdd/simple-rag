@@ -1,21 +1,32 @@
 """向量存储服务
 
-封装 Qdrant 向量数据库操作：
-- collection 管理（自动创建）
-- 向量写入（带 payload）
-- 相似度检索（余弦距离，含阈值过滤）
+封装 Qdrant 向量数据库操作（混合检索）：
+- collection 管理（自动创建，含 dense + sparse 向量配置）
+- 向量写入（同时写入稠密向量和文本稀疏向量）
+- 混合检索（稠密向量 + BM25 稀疏向量，使用 RRF 融合排序）
 - 按文档名删除
 """
 
 import asyncio
+import hashlib
 import logging
+import re
 import warnings
 from typing import Any
 
 from langchain_core.documents import Document
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http import models as qdrant_models
-from qdrant_client.models import Distance, VectorParams
+from qdrant_client.models import (
+    Distance,
+    Fusion,
+    FusionQuery,
+    Modifier,
+    Prefetch,
+    SparseVector,
+    SparseVectorParams,
+    VectorParams,
+)
 
 from app.core.config import settings
 
@@ -41,10 +52,45 @@ def _get_client() -> AsyncQdrantClient:
     return _client
 
 
+def _text_to_sparse_vector(text: str) -> SparseVector:
+    """将文本分词并转为 Qdrant SparseVector。
+
+    分词策略（与 Qdrant 搜索端保持一致）：
+    - 中文单字切分
+    - 英文/数字按单词切分
+    - 小写归一化
+    - MD5 hash 转整数索引（确保跨进程稳定）
+    - 值 = TF（词频），Qdrant 搜索时自动应用 IDF 修正
+
+    Args:
+        text: 输入文本
+
+    Returns:
+        SparseVector 对象，包含 indices 和 values
+    """
+    # 提取中文单字 + 英文/数字单词
+    tokens = re.findall(r"[\u4e00-\u9fff]|[a-zA-Z0-9]+", text.lower())
+
+    tf: dict[str, int] = {}
+    for token in tokens:
+        tf[token] = tf.get(token, 0) + 1
+
+    indices: list[int] = []
+    values: list[float] = []
+    for token, count in sorted(tf.items(), key=lambda x: -x[1]):
+        idx = int(hashlib.md5(token.encode()).hexdigest(), 16) % (2**31 - 1)
+        indices.append(idx)
+        values.append(float(count))
+
+    return SparseVector(indices=indices, values=values)
+
+
 async def ensure_collection() -> None:
     """确保 Qdrant collection 存在，不存在则创建。
 
-    创建时使用配置的向量维度（4096）和余弦距离。
+    创建时配置：
+    - dense: 稠密向量（embedding, 4096 维, 余弦距离）
+    - sparse: 稀疏向量（BM25, 关键词检索, IDF 修正）
     """
     client = _get_client()
     collection_name = settings.qdrant_collection_name
@@ -55,12 +101,21 @@ async def ensure_collection() -> None:
     if collection_name not in existing:
         await client.create_collection(
             collection_name=collection_name,
-            vectors_config=VectorParams(
-                size=settings.embedding_vector_size,
-                distance=Distance.COSINE,
-            ),
+            vectors_config={
+                "dense": VectorParams(
+                    size=settings.embedding_vector_size,
+                    distance=Distance.COSINE,
+                ),
+            },
+            sparse_vectors_config={
+                "sparse": SparseVectorParams(modifier=Modifier.IDF),
+            },
         )
-        logger.info("创建 Qdrant collection: %s (size=%d)", collection_name, settings.embedding_vector_size)
+        logger.info(
+            "创建 Qdrant collection: %s (dense size=%d, sparse=BM25)",
+            collection_name,
+            settings.embedding_vector_size,
+        )
     else:
         logger.debug("Qdrant collection 已存在: %s", collection_name)
 
@@ -92,7 +147,10 @@ async def upsert(chunks: list[Document], embeddings: list[list[float]]) -> int:
         all_points.append(
             qdrant_models.PointStruct(
                 id=i,
-                vector=vector,
+                vector={
+                    "dense": vector,
+                    "sparse": _text_to_sparse_vector(chunk.page_content),
+                },
                 payload={
                     "source": chunk.metadata.get("source", ""),
                     "section": chunk.metadata.get("section", ""),
@@ -121,22 +179,30 @@ async def upsert(chunks: list[Document], embeddings: list[list[float]]) -> int:
 
 async def search(
     query_vector: list[float],
+    query_text: str,
     top_k: int | None = None,
     score_threshold: float | None = None,
 ) -> list[dict[str, Any]]:
-    """在 Qdrant 中检索最相似的文档片段。
+    """在 Qdrant 中做混合检索（稠密向量 + BM25 稀疏向量，RRF 融合排序）。
+
+    双路检索：
+    - dense: 语义向量检索（余弦距离）
+    - sparse: 关键词检索（BM25, Qdrant 内置 IDF 分词器）
+
+    结果通过 RRF（Reciprocal Rank Fusion）融合排序。
 
     Args:
-        query_vector: 查询向量
+        query_vector: 稠密查询向量
+        query_text: 原始查询文本（用于 sparse 检索）
         top_k: 返回的最大结果数
-        score_threshold: 相似度分数阈值，低于此值的会被过滤
+        score_threshold: dense 检索的相似度阈值，低于此值的被过滤
 
     Returns:
         检索结果列表，每个元素包含:
         - source: 来源文件路径
         - section: 章节标题
         - content: 片段原文
-        - score: 相似度分数
+        - score: RRF 融合后的排序分数
     """
     client = _get_client()
     collection_name = settings.qdrant_collection_name
@@ -144,11 +210,24 @@ async def search(
     top_k = top_k or settings.qdrant_top_k
     score_threshold = score_threshold if score_threshold is not None else settings.qdrant_score_threshold
 
+    # 双路 prefetch + RRF 融合
     hits = await client.query_points(
         collection_name=collection_name,
-        query=query_vector,
+        prefetch=[
+            Prefetch(
+                query=query_vector,
+                using="dense",
+                limit=top_k * 2,
+                score_threshold=score_threshold,
+            ),
+            Prefetch(
+                query=_text_to_sparse_vector(query_text),
+                using="sparse",
+                limit=top_k * 2,
+            ),
+        ],
+        query=FusionQuery(fusion=Fusion.RRF),
         limit=top_k,
-        score_threshold=score_threshold,
     )
 
     results: list[dict[str, Any]] = []

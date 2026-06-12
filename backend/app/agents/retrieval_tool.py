@@ -57,8 +57,8 @@ async def retrieve_knowledge(query: str) -> str:
     logger.info("检索知识库: \"%s\"", query[:50])
     query_vector = await embed(query)
 
-    # 2. 向量检索（top_k=5, score>=0.7）
-    results = await search(query_vector)
+    # 2. 混合检索：dense（语义）+ sparse（关键词，Qdrant 内置 BM25），RRF 融合排序
+    results = await search(query_vector, query_text=query)
 
     # 3. 检索为空
     if not results:
