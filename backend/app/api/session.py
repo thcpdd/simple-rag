@@ -97,3 +97,51 @@ async def get_session_detail(
         title=session.title,
         messages=messages,
     )
+
+
+@router.delete("/{thread_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_session(
+    thread_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """删除指定会话。
+
+    1. 验证会话存在且属于当前用户
+    2. 停止正在运行的任务（若有）
+    3. 删除 Checkpointer 中的 checkpoint 数据
+    4. 删除 MySQL sessions 记录
+    """
+    # 1. 验证会话存在且属于当前用户
+    result = await db.execute(
+        select(SessionModel).where(
+            SessionModel.thread_id == thread_id,
+            SessionModel.user_id == current_user.id,
+        )
+    )
+    session = result.scalar_one_or_none()
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="会话不存在",
+        )
+
+    # 2. 停止正在运行的任务（若有）
+    try:
+        chat_task_manager.stop(thread_id)
+    except LookupError:
+        pass  # 没有运行中的任务，忽略
+    except Exception as e:
+        logger.warning("停止任务失败: thread_id=%s, error=%s", thread_id, e)
+
+    # 3. 删除 Checkpointer 中的 checkpoint 数据
+    try:
+        await chat_task_manager.delete_thread_checkpoints(thread_id)
+    except Exception as e:
+        logger.warning("删除 Checkpointer 数据失败: thread_id=%s, error=%s", thread_id, e)
+
+    # 4. 删除 MySQL sessions 记录
+    await db.delete(session)
+    await db.commit()
+
+    logger.info("会话已删除: thread_id=%s, user_id=%s", thread_id, current_user.id)

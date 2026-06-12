@@ -7,6 +7,14 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
   Send,
   Plus,
   MessageSquare,
@@ -20,6 +28,7 @@ import {
   User,
   Sparkles,
   Search,
+  Trash2,
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -51,6 +60,9 @@ export default function ChatPage() {
 
   // Source references
   const [showSources, setShowSources] = useState<Record<string, boolean>>({})
+
+  // Delete confirmation state
+  const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<string | null>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -216,7 +228,34 @@ export default function ChatPage() {
     setShowSources((prev) => ({ ...prev, [msgId]: !prev[msgId] }))
   }
 
+  const handleDeleteSession = (e: React.MouseEvent, tid: string) => {
+    e.stopPropagation()
+    setDeleteConfirmTarget(tid)
+  }
+
+  const confirmDeleteSession = async () => {
+    const tid = deleteConfirmTarget
+    if (!tid) return
+    setDeleteConfirmTarget(null)
+    // 如果正在流式输出中，先中止
+    if (streaming && tid === currentThreadId) {
+      abortControllerRef.current?.abort()
+      setStreaming(false)
+      streamingRef.current = false
+    }
+    try {
+      await api.delete(`/session/${tid}`)
+      setSessions((prev) => prev.filter((s) => s.thread_id !== tid))
+      if (tid === currentThreadId) {
+        handleNewChat()
+      }
+    } catch {
+      alert('删除会话失败')
+    }
+  }
+
   return (
+    <>
     <div className="flex h-full">
       {/* Session sidebar */}
       <div className="w-72 min-w-0 border-l border-slate-200/80 flex flex-col bg-white/80 shrink-0 order-last">
@@ -269,6 +308,13 @@ export default function ChatPage() {
                       {new Date(s.updated_at).toLocaleDateString('zh-CN')}
                     </p>
                   </div>
+                  <button
+                    onClick={(e) => handleDeleteSession(e, s.thread_id)}
+                    className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all duration-200 shrink-0"
+                    title="删除会话"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </button>
               ))}
             </div>
@@ -446,5 +492,32 @@ export default function ChatPage() {
         </div>
       </div>
     </div>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteConfirmTarget !== null} onOpenChange={(open) => !open && setDeleteConfirmTarget(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>删除会话</DialogTitle>
+            <DialogDescription>
+              确定要删除该会话吗？删除后无法恢复。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmTarget(null)}
+            >
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteSession}
+            >
+              删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

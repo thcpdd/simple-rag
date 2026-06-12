@@ -150,6 +150,28 @@ async def get_state(thread_id: str):
         raise
 
 
+async def delete_thread_checkpoints(thread_id: str) -> None:
+    """删除指定 thread_id 在 Checkpointer 中的 checkpoint 数据。"""
+    await _get_checkpointer()  # 确保 _conn 已初始化
+    if _conn is None:
+        raise RuntimeError("Checkpointer 未初始化")
+    try:
+        async with _conn.cursor() as cursor:
+            await cursor.execute(
+                "DELETE FROM checkpoint_blobs WHERE thread_id = %s", (thread_id,)
+            )
+            await cursor.execute(
+                "DELETE FROM checkpoint_writes WHERE thread_id = %s", (thread_id,)
+            )
+            await cursor.execute(
+                "DELETE FROM checkpoints WHERE thread_id = %s", (thread_id,)
+            )
+        logger.info("Checkpointer 数据已删除: thread_id=%s", thread_id)
+    except Exception as e:
+        logger.exception("删除 Checkpointer 数据失败: thread_id=%s", thread_id)
+        raise
+
+
 async def shutdown() -> None:
     """关闭 Checkpointer 连接池（应用关闭时调用）。"""
     global _checkpointer, _agent, _conn
