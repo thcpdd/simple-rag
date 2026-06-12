@@ -22,11 +22,16 @@ class Settings(BaseSettings):
     qdrant_api_key: str = Field(default="")
     qdrant_collection_name: str = Field(default="simplerag")
 
-    # ========== LLM 模型 ==========
+    # ========== 对话模型 (OpenAI 兼容) ==========
     openai_model: str = Field(default="gpt-4o-mini")
-    openai_embedding_model: str = Field(default="text-embedding-3-small")
     openai_api_key: str = Field(default="")
     openai_base_url: str = Field(default="https://api.openai.com/v1")
+
+    # ========== Embedding 模型 (独立配置) ==========
+    embedding_model: str = Field(default="text-embedding-3-small")
+    embedding_api_key: str = Field(default="")
+    embedding_api_base_url: str = Field(default="https://api.openai.com/v1")
+    embedding_vector_size: int = Field(default=1536)
 
     # ========== 应用 ==========
     app_host: str = Field(default="0.0.0.0")
