@@ -15,12 +15,9 @@ import logging
 
 from app.services.embedding import embed
 from app.services.vector_store import search
+from app.utils.logging import setup_logging
 
-logging.basicConfig(
-    level=logging.WARNING,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%H:%M:%S",
-)
+setup_logging(level="WARNING")
 logger = logging.getLogger(__name__)
 
 

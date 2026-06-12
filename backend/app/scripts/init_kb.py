@@ -23,12 +23,9 @@ from app.models.knowledge_doc import KnowledgeDoc
 from app.services.document_parser import parse_document
 from app.services.embedding import embed_batch
 from app.services.vector_store import ensure_collection, upsert
+from app.utils.logging import setup_logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%H:%M:%S",
-)
+setup_logging(level="INFO")
 logger = logging.getLogger(__name__)
 
 # 知识库根目录
