@@ -10,7 +10,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { MessageSquare, BookOpen, PanelLeftClose, PanelLeft, LogOut, User } from 'lucide-react'
+import {
+  MessageSquare,
+  BookOpen,
+  PanelLeftClose,
+  PanelLeft,
+  LogOut,
+  User,
+} from 'lucide-react'
 
 const navItems = [
   { to: '/chat', label: '智能对话', icon: MessageSquare },
@@ -29,93 +36,137 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-[#F8FAFC]">
       {/* Sidebar */}
       <aside
-        className={`flex flex-col border-r bg-muted/20 transition-all duration-200 ${
-          collapsed ? 'w-16' : 'w-56'
-        }`}
+        className={`flex flex-col border-r border-slate-200/80 bg-white transition-all duration-300 ease-in-out ${
+          collapsed ? 'w-16' : 'w-60'
+        } shrink-0`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-2 px-4 h-14 shrink-0">
-          <div className="rounded-lg bg-primary p-1.5">
-            <MessageSquare className="h-5 w-5 text-primary-foreground" />
+        <div className="flex items-center gap-3 px-4 h-16 shrink-0">
+          <div className="rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-2 shadow-md shadow-blue-500/20 shrink-0">
+            <MessageSquare className="h-5 w-5 text-white" />
           </div>
-          {!collapsed && (
-            <span className="font-semibold text-sm truncate">AI 智能客服</span>
-          )}
+          <div className={`overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+            <span className="font-semibold text-sm text-slate-800 whitespace-nowrap">AI 智能客服</span>
+          </div>
         </div>
 
-        <Separator />
+        <div className="px-3">
+          <Separator className="bg-slate-100" />
+        </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-3 px-2 space-y-1">
+        <nav className="flex-1 py-4 px-3 space-y-1">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === '/chat'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative ${
                   isActive
-                    ? 'bg-primary/10 text-primary font-medium'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                } ${collapsed ? 'justify-center' : ''}`
+                    ? 'bg-blue-50 text-blue-700 font-medium'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                } ${collapsed ? 'justify-center px-2' : ''}`
               }
             >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="truncate">{item.label}</span>}
+              {({ isActive }) => (
+                <>
+                  {/* Active indicator bar */}
+                  {isActive && !collapsed && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-blue-600 rounded-full" />
+                  )}
+                  <item.icon className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                    isActive ? 'scale-110' : 'group-hover:scale-105'
+                  }`} />
+                  {!collapsed && (
+                    <span className="truncate">{item.label}</span>
+                  )}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
 
-        <Separator />
+        <div className="px-3">
+          <Separator className="bg-slate-100" />
+        </div>
 
         {/* Collapse toggle */}
-        <div className="p-2">
+        <div className="p-2.5">
           <Button
             variant="ghost"
             size="sm"
-            className={`w-full ${collapsed ? 'px-0' : ''}`}
+            className={`w-full text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all duration-200 ${
+              collapsed ? 'px-0' : 'justify-between px-3'
+            }`}
             onClick={() => setCollapsed(!collapsed)}
           >
             {collapsed ? (
-              <PanelLeft className="h-4 w-4" />
+              <PanelLeft className="h-4 w-4 mx-auto" />
             ) : (
-              <PanelLeftClose className="h-4 w-4 mr-2" />
+              <>
+                <span className="text-xs">收起侧栏</span>
+                <PanelLeftClose className="h-4 w-4" />
+              </>
             )}
-            {!collapsed && <span className="text-xs">收起侧栏</span>}
           </Button>
         </div>
 
         {/* User */}
-        <div className="p-2 border-t">
+        <div className="p-2.5 border-t border-slate-100">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className={`w-full ${collapsed ? 'px-0 justify-center' : 'justify-start'} gap-2`}
+                className={`w-full transition-all duration-200 hover:bg-slate-50 ${
+                  collapsed ? 'px-0 justify-center' : 'justify-start gap-2.5 px-3'
+                }`}
               >
-                <Avatar className="h-6 w-6">
-                  <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                <Avatar className="h-7 w-7 ring-2 ring-slate-100 ring-offset-1">
+                  <AvatarFallback className="text-xs font-medium bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
                     {userEmail.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 {!collapsed && (
-                  <span className="text-xs truncate text-muted-foreground">
-                    {userEmail.split('@')[0]}
-                  </span>
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="text-xs font-medium text-slate-700 truncate">
+                      {userEmail.split('@')[0]}
+                    </p>
+                    <p className="text-[10px] text-slate-400 truncate">
+                      {userEmail.split('@')[1] || ''}
+                    </p>
+                  </div>
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" side="right" className="w-48">
-              <DropdownMenuItem disabled>
-                <User className="h-4 w-4 mr-2" />
-                {userEmail}
+            <DropdownMenuContent align="end" side="right" className="w-52 p-1.5">
+              <div className="flex items-center gap-3 px-2 py-2 mb-1">
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-sm">
+                    {userEmail.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-800 truncate">
+                    {userEmail.split('@')[0]}
+                  </p>
+                  <p className="text-xs text-slate-400 truncate">{userEmail}</p>
+                </div>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled className="rounded-md py-2 text-slate-400 cursor-default">
+                <User className="h-4 w-4 mr-2.5" />
+                个人信息
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                <LogOut className="h-4 w-4 mr-2" />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="rounded-md py-2 text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer"
+              >
+                <LogOut className="h-4 w-4 mr-2.5" />
                 退出登录
               </DropdownMenuItem>
             </DropdownMenuContent>

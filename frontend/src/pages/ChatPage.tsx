@@ -18,8 +18,8 @@ import {
   StopCircle,
   Bot,
   User,
-  Loader2,
   Sparkles,
+  Search,
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -204,45 +204,53 @@ export default function ChatPage() {
   return (
     <div className="flex h-full">
       {/* Session sidebar */}
-      <div className="w-72 min-w-0 border-r flex flex-col bg-muted/10 shrink-0">
+      <div className="w-72 min-w-0 border-l border-slate-200/80 flex flex-col bg-white/80 shrink-0 order-last">
         <div className="p-3">
           <Button
             variant="outline"
-            className="w-full justify-start gap-2"
+            className="w-full justify-start gap-2 border-slate-200/80 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
             onClick={handleNewChat}
           >
             <Plus className="h-4 w-4" />
             新建对话
           </Button>
         </div>
-        <Separator />
+        <Separator className="bg-slate-100" />
         <div className="flex-1 overflow-y-auto min-w-0">
           {loadingSessions ? (
             <div className="p-4 space-y-3">
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-12 w-full" />
+                <Skeleton key={i} className="h-14 w-full rounded-lg bg-slate-100" />
               ))}
             </div>
           ) : sessions.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">
-              暂无对话记录
+            <div className="p-8 text-center">
+              <div className="rounded-full bg-slate-50 w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                <MessageSquare className="h-5 w-5 text-slate-300" />
+              </div>
+              <p className="text-sm text-slate-400">暂无对话记录</p>
+              <p className="text-xs text-slate-300 mt-1">开始新的对话吧</p>
             </div>
           ) : (
-            <div className="p-2 space-y-1">
+            <div className="p-2 space-y-0.5">
               {sessions.map((s) => (
                 <button
                   key={s.thread_id}
                   onClick={() => navigate(`/chat/${s.thread_id}`)}
-                  className={`w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors flex items-start gap-2 group ${
+                  className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-start gap-2.5 group ${
                     s.thread_id === currentThreadId
-                      ? 'bg-primary/10 text-primary'
-                      : 'hover:bg-accent text-foreground'
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'hover:bg-slate-50 text-slate-700'
                   }`}
                 >
-                  <MessageSquare className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+                  <MessageSquare className={`h-4 w-4 mt-0.5 shrink-0 transition-colors ${
+                    s.thread_id === currentThreadId ? 'text-blue-500' : 'text-slate-400 group-hover:text-slate-500'
+                  }`} />
                   <div className="flex-1 min-w-0">
-                    <p className="truncate">{s.title || '新对话'}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="truncate font-medium">{s.title || '新对话'}</p>
+                    <p className={`text-xs mt-0.5 ${
+                      s.thread_id === currentThreadId ? 'text-blue-400' : 'text-slate-400'
+                    }`}>
                       {new Date(s.updated_at).toLocaleDateString('zh-CN')}
                     </p>
                   </div>
@@ -254,58 +262,79 @@ export default function ChatPage() {
       </div>
 
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-white">
         {/* Messages */}
         <ScrollArea className="flex-1 p-0">
-          <div className="max-w-3xl mx-auto px-4 py-6">
+          <div className="px-6 py-8">
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-                <div className="rounded-full bg-primary/5 p-4 mb-4">
-                  <Sparkles className="h-8 w-8 text-primary/60" />
+              <div className="flex flex-col items-center justify-center h-[65vh] text-center">
+                <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 p-5 mb-5 shadow-sm animate-avatar-float">
+                  <Sparkles className="h-10 w-10 text-blue-500" />
                 </div>
-                <h2 className="text-xl font-semibold mb-2">AI 智能客服</h2>
-                <p className="text-muted-foreground text-sm max-w-md">
+                <h2 className="text-xl font-semibold text-slate-800 mb-2">AI 智能客服</h2>
+                <p className="text-slate-500 text-sm max-w-md leading-relaxed">
                   我是您的智能客服助手。您可以向我咨询产品信息、使用帮助等问题，我会基于知识库为您提供准确的回答。
                 </p>
+                <div className="mt-6 flex items-center gap-1.5 text-xs text-slate-400">
+                  <Search className="h-3 w-3" />
+                  <span>输入问题开始对话</span>
+                </div>
               </div>
             ) : (
               <div className="space-y-6">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                {messages.map((msg, idx) => (
+                  <div
+                    key={msg.id}
+                    className={`message-enter flex gap-3 ${
+                      msg.role === 'user' ? 'justify-end' : ''
+                    }`}
+                    style={{ animationDelay: `${idx * 0.05}s` }}
+                  >
                     {msg.role === 'assistant' && (
                       <div className="flex-shrink-0 mt-1">
-                        <div className="rounded-full bg-primary/10 p-2">
-                          <Bot className="h-4 w-4 text-primary" />
+                        <div className="rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-2 shadow-sm">
+                          <Bot className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     )}
 
-                    <div className={`max-w-[80%] ${msg.role === 'user' ? 'order-1' : ''}`}>
+                    <div className={`${msg.role === 'user' ? 'max-w-[78%]' : 'flex-1 min-w-0'} ${msg.role === 'user' ? 'order-1' : ''}`}>
                       {msg.role === 'user' ? (
-                        <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm">
-                          {msg.content}
+                        <div className="flex items-end gap-2">
+                          <div className="bg-gradient-to-br from-blue-600 to-blue-500 text-white rounded-2xl rounded-br-sm px-4 py-2.5 text-sm shadow-sm shadow-blue-200">
+                            {msg.content}
+                          </div>
+                          <div className="rounded-full bg-slate-100 p-1.5 shrink-0">
+                            <User className="h-3.5 w-3.5 text-slate-500" />
+                          </div>
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <div className="prose prose-sm dark:prose-invert max-w-none markdown-content">
-                            {msg.content ? (
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {msg.content}
-                              </ReactMarkdown>
-                            ) : (
-                              <span className="text-muted-foreground">
-                                <Loader2 className="h-4 w-4 inline animate-spin mr-2" />
-                                思考中...
-                              </span>
-                            )}
+                          <div className="px-4 py-3">
+                            <div className="prose prose-sm max-w-none markdown-content text-slate-700">
+                              {msg.content ? (
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {msg.content}
+                                </ReactMarkdown>
+                              ) : (
+                                <span className="text-slate-400 flex items-center gap-2">
+                                  <span className="inline-flex items-center gap-1">
+                                    <span className="typing-dot" />
+                                    <span className="typing-dot" />
+                                    <span className="typing-dot" />
+                                  </span>
+                                  <span className="ml-1">思考中...</span>
+                                </span>
+                              )}
+                            </div>
                           </div>
 
                           {/* Source references */}
                           {msg.sources && msg.sources.length > 0 && (
-                            <div>
+                            <div className="animate-fade-in">
                               <button
                                 onClick={() => toggleSources(msg.id)}
-                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 transition-colors px-1"
                               >
                                 <FileText className="h-3 w-3" />
                                 引用来源 ({msg.sources.length})
@@ -320,9 +349,10 @@ export default function ChatPage() {
                                   {msg.sources.map((src, idx) => (
                                     <div
                                       key={idx}
-                                      className="text-xs bg-muted/50 border rounded-md p-2.5 text-muted-foreground"
+                                      className="text-xs bg-slate-50 border border-slate-100 rounded-lg p-3 text-slate-500 animate-slide-in-left"
+                                      style={{ animationDelay: `${idx * 0.05}s` }}
                                     >
-                                      <div className="font-medium text-foreground mb-0.5">
+                                      <div className="font-medium text-slate-700 mb-0.5">
                                         {src.split('\n')[0]}
                                       </div>
                                       <div className="line-clamp-2">{src.split('\n').slice(1).join('\n')}</div>
@@ -335,11 +365,11 @@ export default function ChatPage() {
 
                           {/* Feedback buttons */}
                           {msg.content && !streaming && (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <button className="hover:text-foreground transition-colors">
+                            <div className="flex items-center gap-1.5 px-1 animate-fade-in">
+                              <button className="p-1.5 rounded-md text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-all duration-200">
                                 <ThumbsUp className="h-3.5 w-3.5" />
                               </button>
-                              <button className="hover:text-foreground transition-colors">
+                              <button className="p-1.5 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all duration-200">
                                 <ThumbsDown className="h-3.5 w-3.5" />
                               </button>
                             </div>
@@ -347,14 +377,6 @@ export default function ChatPage() {
                         </div>
                       )}
                     </div>
-
-                    {msg.role === 'user' && (
-                      <div className="flex-shrink-0 mt-1">
-                        <div className="rounded-full bg-secondary p-2">
-                          <User className="h-4 w-4" />
-                        </div>
-                      </div>
-                    )}
                   </div>
                 ))}
                 <div ref={messagesEndRef} />
@@ -364,8 +386,8 @@ export default function ChatPage() {
         </ScrollArea>
 
         {/* Input area */}
-        <div className="border-t bg-background">
-          <div className="max-w-3xl mx-auto p-4">
+        <div className="border-t border-slate-100 bg-white">
+          <div className="px-6 py-4">
             <div className="flex gap-2">
               <div className="flex-1 relative">
                 <Input
@@ -375,26 +397,34 @@ export default function ChatPage() {
                   onKeyDown={handleKeyDown}
                   placeholder="请输入您的问题..."
                   disabled={streaming}
-                  className="pr-20"
+                  className="pr-20 h-11 bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all rounded-xl"
                   maxLength={500}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 select-none">
                   {input.length}/500
                 </span>
               </div>
               {streaming ? (
-                <Button variant="secondary" onClick={handleStop}>
-                  <StopCircle className="h-4 w-4 mr-1" />
+                <Button
+                  variant="secondary"
+                  onClick={handleStop}
+                  className="h-11 px-4 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border-0 transition-all duration-200 active:scale-95 rounded-xl"
+                >
+                  <StopCircle className="h-4 w-4 mr-1.5" />
                   停止
                 </Button>
               ) : (
-                <Button onClick={handleSend} disabled={!input.trim()}>
-                  <Send className="h-4 w-4 mr-1" />
+                <Button
+                  onClick={handleSend}
+                  disabled={!input.trim()}
+                  className="h-11 px-5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm shadow-blue-200 transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
+                >
+                  <Send className="h-4 w-4 mr-1.5" />
                   发送
                 </Button>
               )}
             </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
+            <p className="text-xs text-slate-400 mt-2.5 text-center">
               AI 回答仅供参考，请以官方信息为准
             </p>
           </div>
