@@ -288,10 +288,13 @@ export default function ChatPage() {
           ) : (
             <div className="p-2 space-y-0.5">
               {sessions.map((s) => (
-                <button
+                <div
                   key={s.thread_id}
                   onClick={() => navigate(`/chat/${s.thread_id}`)}
-                  className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-start gap-2.5 group ${
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/chat/${s.thread_id}`) } }}
+                  className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-start gap-2.5 group cursor-pointer ${
                     s.thread_id === currentThreadId
                       ? 'bg-blue-50 text-blue-700'
                       : 'hover:bg-slate-50 text-slate-700'
@@ -309,13 +312,13 @@ export default function ChatPage() {
                     </p>
                   </div>
                   <button
-                    onClick={(e) => handleDeleteSession(e, s.thread_id)}
+                    onClick={(e) => { e.stopPropagation(); handleDeleteSession(e, s.thread_id) }}
                     className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all duration-200 shrink-0"
                     title="删除会话"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
-                </button>
+                </div>
               ))}
             </div>
           )}
