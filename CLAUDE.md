@@ -10,6 +10,7 @@ cd backend && uv run uvicorn main:app --reload --host 0.0.0.0 --port 7500
 cd backend && uv run python main.py          # alternative
 cd backend && uv sync                        # install/sync deps
 cd backend && uv run ruff check app/         # lint
+cd backend && uv run ruff format --check app/  # check formatting
 cd backend && uv run python -m app.scripts.init_kb        # init KB (parse→embed→store)
 cd backend && uv run python -m app.scripts.test_retrieval  # test vector search
 
@@ -121,7 +122,7 @@ POST /chat/invoke
 GET /chat/stream/{thread_id}  (SSE)
   → chat_task_manager.stream(thread_id)
     → consumes Queue events
-    → yields SSE data: token / sources / error / done
+    → yields SSE data: token / tool_call / tool_result / sources / error / done
 
 POST /chat/stop
   → chat_task_manager.stop(thread_id)
@@ -131,9 +132,10 @@ POST /chat/stop
 ### Session Persistence
 
 - `sessions` table in MySQL stores user ↔ thread_id mapping and a display title.
-- Full conversation history is persisted via **LangGraph AIOMySQLSaver** checkpointer.
+- Full conversation history is persisted via **LangGraph AIOMySQLSaver** checkpointer (`langgraph-checkpoint-mysql[aiomysql]`).
 - `GET /session/list` returns session metadata from MySQL.
 - `GET /session/{thread_id}` recovers full message history from the checkpointer.
+- **In-memory task state**: `chat_task_manager.py` maintains three global dicts (`_tasks`, `_queues`, `_errors`) keyed by thread_id for active conversation management. Tasks are cleaned up 60s after completion via `call_later`.
 
 ### Frontend Architecture (React SPA)
 
@@ -145,8 +147,8 @@ POST /chat/stop
 
 - **Routing**: `react-router-dom v7` — public routes (`/login`, `/register`) and protected routes (`/chat`, `/knowledge`) wrapped in `<ProtectedRoute>` which checks `localStorage.getItem('access_token')`.
 - **Auth flow**: Login/Register → backend returns JWT → stored in localStorage → attached as `Authorization: Bearer <token>` header on every request via `api.ts`.
-- **API client** (`lib/api.ts`): Generic `request<T>()` wrapper around `fetch()` with automatic JWT injection and JSON parsing. Separate `createSSEStream()` for SSE-based chat streaming (token/sources/error/done events).
-- **Chat streaming**: `POST /chat/invoke` returns `{thread_id}` → `GET /chat/stream/{thread_id}` via SSE → renders tokens incrementally via `useState` + `useEffect` with `AbortController` for stop support.
+- **API client** (`lib/api.ts`): Generic `request<T>()` wrapper around `fetch()` with automatic JWT injection and JSON parsing. Separate `createSSEStream()` for SSE-based chat streaming with callbacks for `token`, `tool_call`, `tool_result`, `sources`, `error`, `done` events.
+- **Chat streaming**: `POST /chat/invoke` returns `{thread_id, session_id}` → `GET /chat/stream/{thread_id}` via SSE → renders tokens incrementally via `useState` + `useEffect` with `AbortController` for stop support. Tool calls are displayed as intermediate UI states.
 - **UI components**: shadcn/ui primitives (Radix-based) + Tailwind CSS v4 + lucide-react icons. `@` path alias maps to `src/`.
 - **Dev proxy**: Vite dev server proxies `/api/*` → `http://127.0.0.1:7500` (strips `/api` prefix). No CORS issues in development.
 
@@ -160,7 +162,7 @@ POST /chat/stop
 
 ### Key Design Decisions
 
-- **Agentic RAG**: `retrieval_tool.py` wraps vector search as a LangChain `@tool`. The LLM decides when to retrieve, avoiding unnecessary embedding calls for non-knowledge queries.
+- **Agentic RAG**: `retrieval_tool.py` wraps vector search as a LangChain `@tool`. The LLM decides when to retrieve, avoiding unnecessary embedding calls for non-knowledge queries. Query is capped at 500 characters.
 - **Dual storage**: MySQL stores document metadata (status, md5 hash, chunk count); Qdrant stores vectors and chunk content. Deletion removes from both.
 - **Idempotent init**: `init_kb.py` computes MD5 per file, skips existing hashes in MySQL.
 - **Async throughout**: SQLAlchemy async session, AsyncOpenAI, AsyncQdrantClient, asyncio task/queue for streaming.
@@ -176,6 +178,10 @@ POST /chat/stop
 2. Start frontend (separate terminal): `cd frontend && pnpm dev` (port 5173)
 3. Frontend proxies `/api/*` to backend, so open `http://localhost:5173` in browser.
 4. To initialize knowledge base: `cd backend && uv run python -m app.scripts.init_kb`
+
+### Project Context
+
+This is an AI 智能客服系统 (AI-Powered Customer Service System) — a school assignment project implementing a full RAG (Retrieval-Augmented Generation) pipeline with Agentic AI capabilities. The sample knowledge base (`knowledges/auperator/`) contains product documentation for the fictional "Auperator" intelligent operations system.
 
 ### Dependencies
 
