@@ -46,21 +46,20 @@ async def get_doc(db: AsyncSession, doc_id: int) -> KnowledgeDoc | None:
     return result.scalar_one_or_none()
 
 
-async def process_document(db: AsyncSession, abs_path: Path) -> KnowledgeDoc:
-    """处理单个文档：解析 → 向量化 → 写入 Qdrant → 更新 MySQL。
+async def create_doc_record(db: AsyncSession, abs_path: Path) -> KnowledgeDoc:
+    """创建初始文档记录（状态：processing），不进行实际处理。
 
     Args:
         db: 数据库会话
         abs_path: 文档的绝对路径
 
     Returns:
-        处理完成后的 KnowledgeDoc 记录
+        新创建的 KnowledgeDoc 记录
     """
     rel_path = str(abs_path.relative_to(KNOWLEDGE_BASE_DIR))
     md5 = _compute_md5(abs_path)
     file_size = abs_path.stat().st_size
 
-    # 创建记录（状态：processing）
     doc = KnowledgeDoc(
         file_path=rel_path,
         original_filename=abs_path.name,
@@ -71,39 +70,56 @@ async def process_document(db: AsyncSession, abs_path: Path) -> KnowledgeDoc:
     db.add(doc)
     await db.commit()
     await db.refresh(doc)
-
-    try:
-        # 解析
-        chunks = parse_document(str(abs_path))
-
-        # 覆盖 source 为相对路径
-        for chunk in chunks:
-            chunk.metadata["source"] = rel_path
-
-        # 向量化
-        texts = [c.page_content for c in chunks]
-        embeddings = await embed_batch(texts)
-
-        # 写入 Qdrant
-        await ensure_collection()
-        await upsert(chunks, embeddings)
-
-        # 更新状态
-        doc.status = "ready"
-        doc.chunk_count = len(chunks)
-        await db.commit()
-        await db.refresh(doc)
-
-        logger.info("文档处理完成: %s (%d chunks)", rel_path, len(chunks))
-
-    except Exception as e:
-        doc.status = "failed"
-        doc.error_message = str(e)
-        await db.commit()
-        await db.refresh(doc)
-        logger.error("文档处理失败: %s - %s", rel_path, e)
-
     return doc
+
+
+async def process_document_background(doc_id: int, abs_path: Path) -> None:
+    """后台处理文档：解析 → 向量化 → 写入 Qdrant → 更新 MySQL。
+
+    使用独立的 DB 会话，适合 FastAPI BackgroundTasks 调用。
+
+    Args:
+        doc_id: KnowledgeDoc 记录的 ID
+        abs_path: 文档的绝对路径
+    """
+    from app.core.database import async_session
+
+    async with async_session() as db:
+        doc = await db.get(KnowledgeDoc, doc_id)
+        if doc is None:
+            logger.error("文档记录不存在: id=%d", doc_id)
+            return
+
+        rel_path = doc.file_path
+
+        try:
+            # 解析
+            chunks = parse_document(str(abs_path))
+
+            # 覆盖 source 为相对路径
+            for chunk in chunks:
+                chunk.metadata["source"] = rel_path
+
+            # 向量化
+            texts = [c.page_content for c in chunks]
+            embeddings = await embed_batch(texts)
+
+            # 写入 Qdrant
+            await ensure_collection()
+            await upsert(chunks, embeddings)
+
+            # 更新状态
+            doc.status = "ready"
+            doc.chunk_count = len(chunks)
+            await db.commit()
+
+            logger.info("文档处理完成: %s (%d chunks)", rel_path, len(chunks))
+
+        except Exception as e:
+            doc.status = "failed"
+            doc.error_message = str(e)
+            await db.commit()
+            logger.error("文档处理失败: %s - %s", rel_path, e)
 
 
 async def delete_document(db: AsyncSession, doc: KnowledgeDoc) -> None:

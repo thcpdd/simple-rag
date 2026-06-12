@@ -85,18 +85,35 @@ export default function KnowledgePage() {
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const stopPoll = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current)
+      pollRef.current = null
+    }
+  }, [])
 
   const loadDocs = useCallback(async () => {
     setLoading(true)
     try {
       const data = await api.get<{ total: number; items: KnowledgeDocResponse[] }>('/knowledge/list')
       setDocs(data.items || [])
+      // 没有 processing 中的文档时停止轮询
+      if (!data.items?.some(d => d.status === 'processing')) {
+        stopPoll()
+      }
     } catch {
       // ignore
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [stopPoll])
+
+  // 组件卸载时停止轮询
+  useEffect(() => {
+    return () => stopPoll()
+  }, [stopPoll])
 
   useEffect(() => {
     loadDocs()
@@ -115,6 +132,9 @@ export default function KnowledgePage() {
       setUploadOpen(false)
       setUploadFile(null)
       loadDocs()
+      // 启动轮询，等待后台处理完成
+      stopPoll()
+      pollRef.current = setInterval(loadDocs, 2000)
     } catch (err) {
       setUploadError(err instanceof api.ApiError ? err.message : '上传失败')
     } finally {

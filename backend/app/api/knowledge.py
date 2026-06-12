@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
@@ -44,13 +44,14 @@ async def get_doc(
     return doc
 
 
-@router.post("/upload", response_model=KnowledgeDocResponse, status_code=201)
+@router.post("/upload", response_model=KnowledgeDocResponse, status_code=202)
 async def upload_doc(
     file: UploadFile,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
-    """上传知识库文档（支持 .md / .txt）。"""
+    """上传知识库文档（支持 .md / .txt）。后台异步处理，立即返回。"""
     # 1. 校验文件类型
     ext = Path(file.filename or "").suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
@@ -72,15 +73,13 @@ async def upload_doc(
     save_path = UPLOAD_DIR / (file.filename or "upload")
     save_path.write_bytes(content)
 
-    # 4. 处理文档（解析 → 向量化 → 写入 Qdrant → 更新 MySQL）
-    doc = await knowledge_service.process_document(db, save_path)
+    # 4. 创建初始记录（状态：processing）
+    doc = await knowledge_service.create_doc_record(db, save_path)
 
-    # 5. 处理失败时返回错误
-    if doc.status == "failed":
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"文档处理失败: {doc.error_message}",
-        )
+    # 5. 后台处理文档（解析 → 向量化 → 写入 Qdrant → 更新状态）
+    background_tasks.add_task(
+        knowledge_service.process_document_background, doc.id, save_path
+    )
 
     return doc
 
