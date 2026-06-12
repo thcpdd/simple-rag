@@ -118,6 +118,30 @@ def stop(thread_id: str) -> None:
     logger.info("Chat 任务已停止: thread_id=%s", thread_id)
 
 
+async def get_state(thread_id: str):
+    """获取指定 thread_id 的对话状态（包含历史消息）。
+
+    调用 LangGraph 的 aget_state 从 Checkpointer 中恢复对话上下文。
+
+    Args:
+        thread_id: 会话线程ID
+
+    Returns:
+        StateSnapshot: LangGraph 状态快照，包含 messages 等信息
+
+    Raises:
+        ValueError: 当 thread_id 不存在或状态获取失败时
+    """
+    agent = await _get_agent()
+    config = {"configurable": {"thread_id": thread_id}}
+    try:
+        state = await agent.aget_state(config)
+        return state
+    except Exception as e:
+        logger.error("获取对话状态失败: thread_id=%s, error=%s", thread_id, e)
+        raise
+
+
 async def shutdown() -> None:
     """关闭 Checkpointer 连接池（应用关闭时调用）。"""
     global _checkpointer, _agent, _conn

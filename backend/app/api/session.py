@@ -1,0 +1,99 @@
+"""Session API 路由
+
+提供以下端点:
+1. GET /session/list       — 获取当前用户的所有会话列表
+2. GET /session/{thread_id} — 获取指定会话的详细聊天记录（通过 LangGraph Checkpointer）
+"""
+
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user
+from app.core.database import get_db
+from app.models.session import Session as SessionModel
+from app.models.user import User
+from app.schemas.session import (
+    SessionDetailResponse,
+    SessionListResponse,
+    SessionMessageResponse,
+    SessionResponse,
+)
+from app.services import chat_task_manager
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/session", tags=["会话"])
+
+
+@router.get("/list", response_model=SessionListResponse)
+async def list_sessions(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """获取当前用户的所有会话列表，按更新时间倒序排列。"""
+    result = await db.execute(
+        select(SessionModel)
+        .where(SessionModel.user_id == current_user.id)
+        .order_by(SessionModel.updated_at.desc())
+    )
+    sessions = result.scalars().all()
+    return SessionListResponse(
+        total=len(sessions),
+        items=[SessionResponse.model_validate(s) for s in sessions],
+    )
+
+
+@router.get("/{thread_id}", response_model=SessionDetailResponse)
+async def get_session_detail(
+    thread_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """获取指定会话的详细聊天记录。
+
+    通过 LangGraph Checkpointer 恢复该 thread_id 对应的完整对话上下文。
+    """
+    # 1. 验证会话存在且属于当前用户
+    result = await db.execute(
+        select(SessionModel).where(
+            SessionModel.thread_id == thread_id,
+            SessionModel.user_id == current_user.id,
+        )
+    )
+    session = result.scalar_one_or_none()
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="会话不存在",
+        )
+
+    # 2. 从 Checkpointer 获取对话状态
+    try:
+        state = await chat_task_manager.get_state(thread_id)
+    except Exception as e:
+        logger.exception("获取对话状态失败: thread_id=%s", thread_id)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取对话记录失败: {e}",
+        )
+
+    # 3. 解析消息列表
+    messages: list[SessionMessageResponse] = []
+    if state and state.values and "messages" in state.values:
+        for msg in state.values["messages"]:
+            messages.append(
+                SessionMessageResponse(
+                    id=getattr(msg, "id", ""),
+                    role=getattr(msg, "type", "unknown"),
+                    content=getattr(msg, "content", ""),
+                )
+            )
+
+    return SessionDetailResponse(
+        thread_id=thread_id,
+        title=session.title,
+        messages=messages,
+    )
