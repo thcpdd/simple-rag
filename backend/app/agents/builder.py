@@ -6,6 +6,7 @@
 import logging
 
 from langchain.agents import create_agent
+from langgraph.types import Checkpointer
 from langchain_openai import ChatOpenAI
 
 from app.core.config import settings
@@ -50,7 +51,7 @@ def _get_llm() -> ChatOpenAI:
     return _llm
 
 
-def build_agent():
+def build_agent(checkpointer: Checkpointer | None = None):
     """构建 Agentic RAG 代理。
 
     Agent 拥有 retrieve_knowledge 工具，可自主判断是否需要检索知识库，
@@ -63,7 +64,8 @@ def build_agent():
     agent = create_agent(
         model=llm,
         tools=[retrieve_knowledge],
-        system_prompt=SYSTEM_PROMPT
+        system_prompt=SYSTEM_PROMPT,
+        checkpointer=checkpointer
     )
     logger.info("Agent 构建完成 (model=%s, tools=%d)", settings.openai_model, 1)
     return agent

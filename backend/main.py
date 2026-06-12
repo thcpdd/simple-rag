@@ -8,6 +8,8 @@ from app.core.config import settings
 from app.core.database import Base, engine
 from app.api.auth import router as auth_router
 from app.api.knowledge import router as knowledge_router
+from app.api.chat import router as chat_router
+from app.services import chat_task_manager
 from app.utils.logging import setup_logging
 
 
@@ -24,6 +26,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         await conn.run_sync(Base.metadata.create_all)
 
     yield
+    await chat_task_manager.shutdown()
     await engine.dispose()
 
 
@@ -44,6 +47,7 @@ app.add_middleware(
 # 注册路由
 app.include_router(auth_router)
 app.include_router(knowledge_router)
+app.include_router(chat_router)
 
 if __name__ == "__main__":
     import uvicorn
