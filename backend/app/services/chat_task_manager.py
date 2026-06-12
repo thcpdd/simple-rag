@@ -8,6 +8,9 @@
 - Agent 通过 astream_events 产出 token，通过 asyncio.Queue 传递给 SSE 端点
 - stream() 从 Queue 中消费事件（token / sources / done / error）
 - stop() 取消对应的 asyncio.Task
+
+注意: 每次任务都创建新的 Agent + MySQL 连接，用完关闭，不维护长连接缓存，
+     避免远程 MySQL 连接空闲断开导致的连接过期问题。
 """
 
 import asyncio
@@ -24,41 +27,36 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# ========== 全局状态 ==========
+# ========== 全局状态（仅任务管理） ==========
 
 _tasks: Dict[str, asyncio.Task] = {}       # thread_id -> asyncio.Task
 _queues: Dict[str, asyncio.Queue] = {}     # thread_id -> asyncio.Queue
 _errors: Dict[str, str] = {}               # thread_id -> error message
 
-_checkpointer: Optional[AIOMySQLSaver] = None
-_conn: Optional[aiomysql.Connection] = None
-_agent = None
 
+# ========== 私有辅助函数 ==========
 
-# ========== 延迟初始化（单例） ==========
+async def _create_agent():
+    """创建一个新的 Agent 实例（含独立 MySQL 连接）。
 
-async def _get_checkpointer() -> AIOMySQLSaver:
-    """获取或初始化 AIOMySQLSaver 检查点器。"""
-    global _checkpointer, _conn
-    if _checkpointer is None:
-        db_url = settings.database_url
-        logger.info("初始化 Chat Checkpointer: %s", db_url)
-        conn_kwargs = AIOMySQLSaver.parse_conn_string(db_url)
-        _conn = await aiomysql.connect(**conn_kwargs, autocommit=True)
-        _checkpointer = AIOMySQLSaver(conn=_conn)
-        await _checkpointer.setup()  # 创建 checkpoint 相关表
-        logger.info("Chat Checkpointer 初始化完成")
-    return _checkpointer
+    每次创建都会建立一个新的 MySQL 连接，使用完后由调用方负责关闭。
+    """
+    db_url = settings.database_url
+    conn_kwargs = AIOMySQLSaver.parse_conn_string(db_url)
+    conn = await aiomysql.connect(**conn_kwargs, autocommit=True)
 
+    try:
+        checkpointer = AIOMySQLSaver(conn=conn)
+        await checkpointer.setup()  # 幂等：CREATE TABLE IF NOT EXISTS
+        agent = build_agent(checkpointer=checkpointer)
+    except Exception:
+        try:
+            conn.close()
+        except Exception:
+            pass
+        raise
 
-async def _get_agent():
-    """获取或初始化带 Checkpointer 的 Agent。"""
-    global _agent
-    if _agent is None:
-        checkpointer = await _get_checkpointer()
-        _agent = build_agent(checkpointer=checkpointer)
-        logger.info("Chat Agent 初始化完成")
-    return _agent
+    return agent, conn
 
 
 # ========== 公开 API ==========
@@ -86,8 +84,8 @@ async def invoke(query: str, thread_id: Optional[str] = None) -> str:
     _queues[thread_id] = queue
     _errors.pop(thread_id, None)
 
-    agent = await _get_agent()
-    task = asyncio.create_task(_run_agent(agent, thread_id, query, queue))
+    agent, conn = await _create_agent()
+    task = asyncio.create_task(_run_agent(agent, conn, thread_id, query, queue))
     _tasks[thread_id] = task
     task.add_done_callback(lambda _: _cleanup_later(thread_id))
 
@@ -140,23 +138,27 @@ async def get_state(thread_id: str):
     Raises:
         ValueError: 当 thread_id 不存在或状态获取失败时
     """
-    agent = await _get_agent()
-    config = {"configurable": {"thread_id": thread_id}}
+    agent, conn = await _create_agent()
     try:
+        config = {"configurable": {"thread_id": thread_id}}
         state = await agent.aget_state(config)
         return state
     except Exception as e:
         logger.error("获取对话状态失败: thread_id=%s, error=%s", thread_id, e)
         raise
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
 async def delete_thread_checkpoints(thread_id: str) -> None:
     """删除指定 thread_id 在 Checkpointer 中的 checkpoint 数据。"""
-    await _get_checkpointer()  # 确保 _conn 已初始化
-    if _conn is None:
-        raise RuntimeError("Checkpointer 未初始化")
+    conn_kwargs = AIOMySQLSaver.parse_conn_string(settings.database_url)
+    conn = await aiomysql.connect(**conn_kwargs, autocommit=True)
     try:
-        async with _conn.cursor() as cursor:
+        async with conn.cursor() as cursor:
             await cursor.execute(
                 "DELETE FROM checkpoint_blobs WHERE thread_id = %s", (thread_id,)
             )
@@ -170,30 +172,29 @@ async def delete_thread_checkpoints(thread_id: str) -> None:
     except Exception as e:
         logger.exception("删除 Checkpointer 数据失败: thread_id=%s", thread_id)
         raise
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
 async def shutdown() -> None:
-    """关闭 Checkpointer 连接池（应用关闭时调用）。"""
-    global _checkpointer, _agent, _conn
-    # 取消所有运行中的任务
+    """取消所有运行中的任务（应用关闭时调用）。"""
     for tid in list(_tasks.keys()):
-        stop(tid)
-    # 关闭 MySQL 连接
-    if _conn is not None:
         try:
-            _conn.close()
-        except Exception:
-            logger.exception("关闭 MySQL 连接时出错")
-        _conn = None
-    _checkpointer = None
-    _agent = None
+            stop(tid)
+        except LookupError:
+            pass
     logger.info("Chat 任务管理器已关闭")
 
 
 # ========== 内部实现 ==========
 
 
-async def _run_agent(agent, thread_id: str, query: str, queue: asyncio.Queue) -> None:
+async def _run_agent(
+    agent, conn: aiomysql.Connection, thread_id: str, query: str, queue: asyncio.Queue
+) -> None:
     """在后台运行 Agent，将事件推入 Queue。"""
     try:
         config = {
@@ -245,6 +246,11 @@ async def _run_agent(agent, thread_id: str, query: str, queue: asyncio.Queue) ->
         logger.exception("Chat 任务异常: thread_id=%s", thread_id)
         _errors[thread_id] = str(e)
         await queue.put(("error", str(e)))
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
 def _cleanup(thread_id: str) -> None:

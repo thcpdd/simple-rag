@@ -13,8 +13,9 @@ engine = create_async_engine(
     echo=settings.debug,
     pool_size=10,
     max_overflow=20,
-    pool_recycle=3600,      # 回收超过1小时的连接，避免 MySQL wait_timeout
-    pool_pre_ping=True,      # 使用连接前验证有效性
+    pool_recycle=300,       # 回收空闲超过5分钟的连接，防止云 NAT/防火墙断开空闲连接
+    pool_pre_ping=True,      # 使用连接前验证有效性（兜底）
+    pool_timeout=10,         # 等待连接池的超时秒数，防止请求无限挂起
 )
 
 async_session = async_sessionmaker(
