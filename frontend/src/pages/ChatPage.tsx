@@ -218,12 +218,19 @@ export default function ChatPage() {
         },
         controller.signal,
         (_name, args) => {
-          // tool_call: insert a tool message with args
+          // tool_call: insert tool message BEFORE the last assistant message
           const toolId = `tool-${Date.now()}`
-          setMessages((prev) => [
-            ...prev,
-            { id: toolId, role: 'tool', content: '', toolArgs: args },
-          ])
+          setMessages((prev) => {
+            const lastAssistantIdx = prev.findLastIndex((m) => m.role === 'assistant')
+            if (lastAssistantIdx === -1) {
+              // No assistant message found, just append
+              return [...prev, { id: toolId, role: 'tool', content: '', toolArgs: args }]
+            }
+            // Insert right before the last assistant message
+            const updated = [...prev]
+            updated.splice(lastAssistantIdx, 0, { id: toolId, role: 'tool', content: '', toolArgs: args })
+            return updated
+          })
         },
         (_name, result) => {
           // tool_result: update the last tool message with the result
