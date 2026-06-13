@@ -48,7 +48,7 @@ async def _create_agent():
     try:
         checkpointer = AIOMySQLSaver(conn=conn)
         await checkpointer.setup()  # 幂等：CREATE TABLE IF NOT EXISTS
-        agent = build_agent(checkpointer=checkpointer)
+        agent = await build_agent(checkpointer=checkpointer)
     except Exception:
         try:
             conn.close()
