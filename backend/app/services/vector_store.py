@@ -141,12 +141,14 @@ async def upsert(chunks: list[Document], embeddings: list[list[float]]) -> int:
     client = _get_client()
     collection_name = settings.qdrant_collection_name
 
-    # 构建所有 points（使用整数 ID）
+    # 构建所有 points（使用 source+content_hash 作为全局唯一 ID）
     all_points: list[qdrant_models.PointStruct] = []
     for i, (chunk, vector) in enumerate(zip(chunks, embeddings)):
+        source = chunk.metadata.get("source", "")
+        content_hash = int(hashlib.md5((source + chunk.page_content).encode()).hexdigest(), 16) % (2**63 - 1)
         all_points.append(
             qdrant_models.PointStruct(
-                id=i,
+                id=content_hash,
                 vector={
                     "dense": vector,
                     "sparse": _text_to_sparse_vector(chunk.page_content),
