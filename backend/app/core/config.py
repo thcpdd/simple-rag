@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -41,6 +43,18 @@ class Settings(BaseSettings):
     app_host: str = Field(default="0.0.0.0")
     app_port: int = Field(default=7500)
     debug: bool = Field(default=False)
+
+    knowledge_base_dir: str = Field(
+        default="",
+        description="知识库文档根目录路径。为空时自动推断",
+    )
+
+    @property
+    def knowledge_base_path(self) -> Path:
+        if self.knowledge_base_dir:
+            return Path(self.knowledge_base_dir)
+        # 自动推断：项目根目录下的 knowledges/
+        return Path(__file__).resolve().parents[3] / "knowledges"
 
     # ========== JWT ==========
     jwt_secret_key: str = Field(default="change-me-to-a-random-secret")

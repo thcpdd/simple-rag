@@ -1,10 +1,15 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from pydantic import BaseModel
+from pydantic.functional_serializers import field_serializer
+
+# 上海时区 (UTC+8)
+SHANGHAI_TZ = timezone(timedelta(hours=8))
 
 
 class KnowledgeDocResponse(BaseModel):
     id: int
+    knowledge_base: str
     file_path: str
     original_filename: str
     file_size: int
@@ -16,7 +21,24 @@ class KnowledgeDocResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    @field_serializer("created_at")
+    def convert_to_shanghai(self, dt: datetime) -> datetime:
+        """将 UTC 时间转为上海时区（UTC+8）。"""
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(SHANGHAI_TZ)
+
 
 class KnowledgeListResponse(BaseModel):
     total: int
     items: list[KnowledgeDocResponse]
+
+
+class KnowledgeBaseItem(BaseModel):
+    name: str
+    doc_count: int
+
+
+class KnowledgeBaseListResponse(BaseModel):
+    total: int
+    items: list[KnowledgeBaseItem]

@@ -18,6 +18,7 @@ from pathlib import Path
 
 from sqlalchemy import select
 
+from app.core.config import settings
 from app.core.database import Base, async_session, engine
 from app.models.knowledge_doc import KnowledgeDoc
 from app.services.document_parser import parse_document
@@ -29,7 +30,7 @@ setup_logging(level="INFO")
 logger = logging.getLogger(__name__)
 
 # 知识库根目录
-KNOWLEDGE_BASE_DIR = Path(__file__).resolve().parents[3] / "knowledges"
+KNOWLEDGE_BASE_DIR = settings.knowledge_base_path
 
 
 def _compute_md5(file_path: Path) -> str:
@@ -51,7 +52,15 @@ def _discover_documents() -> list[Path]:
     files: list[Path] = []
     for ext in supported:
         files.extend(KNOWLEDGE_BASE_DIR.rglob(f"*{ext}"))
+    # 跳过 uploads 目录
+    files = [f for f in files if "uploads" not in f.parts]
     return sorted(files)
+
+
+def _extract_knowledge_base(rel_path: str) -> str:
+    """从相对路径中提取知识库名称（第一个子目录）。"""
+    parts = rel_path.replace("\\", "/").split("/")
+    return parts[0] if parts else "default"
 
 
 async def main() -> None:
@@ -99,12 +108,14 @@ async def main() -> None:
 
             # 解析文档
             try:
+                kb_name = _extract_knowledge_base(rel_path)
                 chunks = parse_document(str(file_path))
             except Exception as e:
                 logger.error("解析失败 %s: %s", rel_path, e)
                 # 写入失败记录
                 file_records.append(
                     KnowledgeDoc(
+                        knowledge_base=_extract_knowledge_base(rel_path),
                         file_path=rel_path,
                         original_filename=file_path.name,
                         file_size=file_path.stat().st_size,
@@ -125,6 +136,7 @@ async def main() -> None:
             # 准备 MySQL 记录（先缓存，写入 Qdrant 后再持久化）
             file_records.append(
                 KnowledgeDoc(
+                    knowledge_base=kb_name,
                     file_path=rel_path,
                     original_filename=file_path.name,
                     file_size=file_path.stat().st_size,

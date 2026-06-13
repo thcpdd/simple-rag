@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { api, type KnowledgeDocResponse } from '@/lib/api'
+import { api, type KnowledgeDocResponse, type KnowledgeBaseItem } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +21,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -34,6 +41,8 @@ import {
   FileUp,
   X,
   AlertTriangle,
+  FolderOpen,
+  Plus,
 } from 'lucide-react'
 
 function formatFileSize(bytes: number): string {
@@ -48,14 +57,13 @@ function formatDate(dateStr: string): string {
 
 function getStatusBadge(status: string) {
   switch (status) {
-    case 'processed':
+    case 'ready':
       return (
         <Badge variant="success" className="gap-1 px-2.5 py-0.5">
           <CheckCircle2 className="h-3 w-3" />
           就绪
         </Badge>
       )
-    case 'pending':
     case 'processing':
       return (
         <Badge variant="warning" className="gap-1 px-2.5 py-0.5">
@@ -81,11 +89,18 @@ export default function KnowledgePage() {
   const [uploadOpen, setUploadOpen] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploadKb, setUploadKb] = useState('')
+  const [newKbName, setNewKbName] = useState('')
+  const [useNewKb, setUseNewKb] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // 知识库列表状态
+  const [bases, setBases] = useState<KnowledgeBaseItem[]>([])
+  const [selectedBase, setSelectedBase] = useState<string>('')
 
   const stopPoll = useCallback(() => {
     if (pollRef.current) {
@@ -94,12 +109,21 @@ export default function KnowledgePage() {
     }
   }, [])
 
+  const loadBases = useCallback(async () => {
+    try {
+      const data = await api.get<{ total: number; items: KnowledgeBaseItem[] }>('/knowledge/bases')
+      setBases(data.items || [])
+    } catch {
+      // ignore
+    }
+  }, [])
+
   const loadDocs = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await api.get<{ total: number; items: KnowledgeDocResponse[] }>('/knowledge/list')
+      const params = selectedBase ? `?knowledge_base=${encodeURIComponent(selectedBase)}` : ''
+      const data = await api.get<{ total: number; items: KnowledgeDocResponse[] }>(`/knowledge/list${params}`)
       setDocs(data.items || [])
-      // 没有 processing 中的文档时停止轮询
       if (!data.items?.some(d => d.status === 'processing')) {
         stopPoll()
       }
@@ -108,12 +132,17 @@ export default function KnowledgePage() {
     } finally {
       setLoading(false)
     }
-  }, [stopPoll])
+  }, [selectedBase, stopPoll])
 
   // 组件卸载时停止轮询
   useEffect(() => {
     return () => stopPoll()
   }, [stopPoll])
+
+  // 初始化加载
+  useEffect(() => {
+    loadBases()
+  }, [loadBases])
 
   useEffect(() => {
     loadDocs()
@@ -121,18 +150,28 @@ export default function KnowledgePage() {
 
   const handleUpload = async () => {
     if (!uploadFile) return
+    const kbName = useNewKb ? newKbName.trim() : uploadKb
+    if (!kbName) {
+      setUploadError('请选择或输入知识库名称')
+      return
+    }
+
     setUploadError('')
     setUploading(true)
 
     const formData = new FormData()
     formData.append('file', uploadFile)
+    formData.append('knowledge_base', kbName)
 
     try {
       await api.upload('/knowledge/upload', formData)
       setUploadOpen(false)
       setUploadFile(null)
+      setUploadKb('')
+      setNewKbName('')
+      setUseNewKb(false)
+      loadBases()
       loadDocs()
-      // 启动轮询，等待后台处理完成
       stopPoll()
       pollRef.current = setInterval(loadDocs, 2000)
     } catch (err) {
@@ -147,6 +186,7 @@ export default function KnowledgePage() {
       await api.delete(`/knowledge/${docId}`)
       setDeleteConfirm(null)
       loadDocs()
+      loadBases()
     } catch {
       // ignore
     }
@@ -173,6 +213,10 @@ export default function KnowledgePage() {
     }
   }
 
+  const handleBaseChange = (base: string) => {
+    setSelectedBase(base)
+  }
+
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
@@ -187,13 +231,13 @@ export default function KnowledgePage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={loadDocs}
+            onClick={() => { loadDocs(); loadBases() }}
             className="border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
           >
             <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
             刷新
           </Button>
-          <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) { setUploadFile(null); setUploadError('') } }}>
+          <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) { setUploadFile(null); setUploadKb(''); setNewKbName(''); setUseNewKb(false); setUploadError('') } }}>
             <DialogTrigger asChild>
               <Button
                 size="sm"
@@ -217,6 +261,59 @@ export default function KnowledgePage() {
                     {uploadError}
                   </div>
                 )}
+
+                {/* 知识库选择 */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">知识库</label>
+                  {useNewKb ? (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="输入新知识库名称"
+                        value={newKbName}
+                        onChange={(e) => setNewKbName(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setUseNewKb(false); setNewKbName('') }}
+                        className="shrink-0"
+                      >
+                        选择已有
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <Select value={uploadKb} onValueChange={setUploadKb}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="选择知识库" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {bases.length === 0 ? (
+                              <SelectItem value="default">默认知识库</SelectItem>
+                            ) : (
+                              bases.map((base) => (
+                                <SelectItem key={base.name} value={base.name}>
+                                  {base.name}（{base.doc_count} 篇）
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setUseNewKb(true); setUploadKb('') }}
+                        className="shrink-0"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        新建
+                      </Button>
+                    </div>
+                  )}
+                </div>
 
                 {/* Drop zone */}
                 <div
@@ -285,14 +382,14 @@ export default function KnowledgePage() {
               <DialogFooter className="gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => { setUploadOpen(false); setUploadFile(null); setUploadError('') }}
+                  onClick={() => { setUploadOpen(false); setUploadFile(null); setUploadKb(''); setNewKbName(''); setUseNewKb(false); setUploadError('') }}
                   className="border-slate-200"
                 >
                   取消
                 </Button>
                 <Button
                   onClick={handleUpload}
-                  disabled={!uploadFile || uploading}
+                  disabled={!uploadFile || uploading || (useNewKb ? !newKbName.trim() : !uploadKb)}
                   className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200"
                 >
                   {uploading ? (
@@ -313,6 +410,40 @@ export default function KnowledgePage() {
         </div>
       </div>
 
+      {/* 知识库标签栏 */}
+      <div className="px-6 py-3 shrink-0 border-b border-slate-100 bg-slate-50/30">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => handleBaseChange('')}
+            className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+              selectedBase === ''
+                ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            全部
+            <span className="ml-1.5 text-xs opacity-70">
+              ({bases.reduce((sum, b) => sum + b.doc_count, 0)})
+            </span>
+          </button>
+          {bases.map((base) => (
+            <button
+              key={base.name}
+              onClick={() => handleBaseChange(base.name)}
+              className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                selectedBase === base.name
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <FolderOpen className="h-3.5 w-3.5" />
+              {base.name}
+              <span className="text-xs opacity-70">({base.doc_count})</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Content */}
       <ScrollArea className="flex-1">
         <div className="p-6">
@@ -328,7 +459,9 @@ export default function KnowledgePage() {
                 <div className="rounded-full bg-slate-50 w-16 h-16 flex items-center justify-center mb-4">
                   <FileText className="h-7 w-7 text-slate-300" />
                 </div>
-                <p className="text-slate-600 font-medium mb-1">暂无知识文档</p>
+                <p className="text-slate-600 font-medium mb-1">
+                  {selectedBase ? `「${selectedBase}」暂无知识文档` : '暂无知识文档'}
+                </p>
                 <p className="text-sm text-slate-400 mb-6">
                   上传 .txt 或 .md 文件以构建知识库
                 </p>
@@ -346,6 +479,9 @@ export default function KnowledgePage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+                    {!selectedBase && (
+                      <TableHead className="text-slate-600 font-medium text-xs uppercase tracking-wider">知识库</TableHead>
+                    )}
                     <TableHead className="text-slate-600 font-medium text-xs uppercase tracking-wider">文件名</TableHead>
                     <TableHead className="text-slate-600 font-medium text-xs uppercase tracking-wider">大小</TableHead>
                     <TableHead className="text-slate-600 font-medium text-xs uppercase tracking-wider">状态</TableHead>
@@ -360,6 +496,14 @@ export default function KnowledgePage() {
                       key={doc.id}
                       className="hover:bg-slate-50/50 transition-colors duration-150"
                     >
+                      {!selectedBase && (
+                        <TableCell>
+                          <Badge variant="secondary" className="gap-1 px-2 py-0.5 text-xs font-normal">
+                            <FolderOpen className="h-3 w-3" />
+                            {doc.knowledge_base}
+                          </Badge>
+                        </TableCell>
+                      )}
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2.5">
                           <FileText className="h-4 w-4 text-blue-500 shrink-0" />

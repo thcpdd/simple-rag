@@ -10,6 +10,10 @@ class KnowledgeDoc(Base):
     __tablename__ = "knowledge_docs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    knowledge_base: Mapped[str] = mapped_column(
+        String(100), nullable=False, default="",
+        comment="知识库名称（按 knowledges/ 下的子目录划分）"
+    )
     file_path: Mapped[str] = mapped_column(
         String(500), unique=True, nullable=False,
         comment="knowledges/ 下的相对路径"

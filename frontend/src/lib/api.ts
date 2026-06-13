@@ -225,6 +225,7 @@ export interface ChatStopResponse {
 
 export interface KnowledgeDocResponse {
   id: number
+  knowledge_base: string
   file_path: string
   original_filename: string
   file_size: number
@@ -238,6 +239,16 @@ export interface KnowledgeDocResponse {
 export interface KnowledgeListResponse {
   total: number
   items: KnowledgeDocResponse[]
+}
+
+export interface KnowledgeBaseItem {
+  name: string
+  doc_count: number
+}
+
+export interface KnowledgeBaseListResponse {
+  total: number
+  items: KnowledgeBaseItem[]
 }
 
 export interface RegisterRequest {

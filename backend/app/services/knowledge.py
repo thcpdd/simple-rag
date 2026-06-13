@@ -7,7 +7,7 @@ import hashlib
 import logging
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -20,7 +20,7 @@ from app.services.vector_store import ensure_collection, upsert
 logger = logging.getLogger(__name__)
 
 # 文档存储根目录
-KNOWLEDGE_BASE_DIR = Path(__file__).resolve().parents[3] / "knowledges"
+KNOWLEDGE_BASE_DIR = settings.knowledge_base_path
 
 
 def _compute_md5(file_path: Path) -> str:
@@ -32,11 +32,20 @@ def _compute_md5(file_path: Path) -> str:
     return hash_md5.hexdigest()
 
 
-async def list_docs(db: AsyncSession) -> list[KnowledgeDoc]:
-    """获取知识库文档列表（按上传时间倒序）。"""
-    result = await db.execute(
-        select(KnowledgeDoc).order_by(KnowledgeDoc.created_at.desc())
-    )
+async def list_docs(
+    db: AsyncSession,
+    knowledge_base: str | None = None,
+) -> list[KnowledgeDoc]:
+    """获取知识库文档列表（按上传时间倒序）。
+
+    Args:
+        db: 数据库会话
+        knowledge_base: 可选，按知识库名称筛选
+    """
+    query = select(KnowledgeDoc).order_by(KnowledgeDoc.created_at.desc())
+    if knowledge_base:
+        query = query.where(KnowledgeDoc.knowledge_base == knowledge_base)
+    result = await db.execute(query)
     return list(result.scalars().all())
 
 
@@ -46,12 +55,17 @@ async def get_doc(db: AsyncSession, doc_id: int) -> KnowledgeDoc | None:
     return result.scalar_one_or_none()
 
 
-async def create_doc_record(db: AsyncSession, abs_path: Path) -> KnowledgeDoc:
+async def create_doc_record(
+    db: AsyncSession,
+    abs_path: Path,
+    knowledge_base: str,
+) -> KnowledgeDoc:
     """创建初始文档记录（状态：processing），不进行实际处理。
 
     Args:
         db: 数据库会话
         abs_path: 文档的绝对路径
+        knowledge_base: 知识库名称
 
     Returns:
         新创建的 KnowledgeDoc 记录
@@ -61,6 +75,7 @@ async def create_doc_record(db: AsyncSession, abs_path: Path) -> KnowledgeDoc:
     file_size = abs_path.stat().st_size
 
     doc = KnowledgeDoc(
+        knowledge_base=knowledge_base,
         file_path=rel_path,
         original_filename=abs_path.name,
         file_size=file_size,
@@ -146,3 +161,25 @@ async def delete_document(db: AsyncSession, doc: KnowledgeDoc) -> None:
     await db.commit()
 
     logger.info("文档已删除: %s", doc.file_path)
+
+
+async def list_knowledge_bases(db: AsyncSession) -> list[dict]:
+    """获取所有知识库列表及其文档数量（以数据库数据为准）。
+
+    Returns:
+        格式: [{"name": "auperator", "doc_count": 5}, ...]
+    """
+    count_query = (
+        select(
+            KnowledgeDoc.knowledge_base,
+            func.count(KnowledgeDoc.id).label("doc_count"),
+        )
+        .where(KnowledgeDoc.knowledge_base != "")
+        .group_by(KnowledgeDoc.knowledge_base)
+        .order_by(KnowledgeDoc.knowledge_base)
+    )
+    result = await db.execute(count_query)
+    return [
+        {"name": row.knowledge_base, "doc_count": row.doc_count}
+        for row in result
+    ]
