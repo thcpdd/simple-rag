@@ -1,0 +1,126 @@
+services:
+  # ============================================
+  # MySQL 数据库
+  # ============================================
+  mysql:
+    image: mysql:8.0.43
+    container_name: simplerag-mysql
+    restart: unless-stopped
+    ports:
+      - "${MYSQL_PORT:-7334}:3306"
+    env_file:
+      - ../backend/.env
+    environment:
+      MYSQL_ROOT_PASSWORD: ragtest
+      MYSQL_DATABASE: simplerag
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pragtest"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - simplerag-network
+
+  # ============================================
+  # Qdrant 向量数据库
+  # ============================================
+  qdrant:
+    image: qdrant/qdrant:v1.17.0
+    container_name: simplerag-qdrant
+    restart: unless-stopped
+    ports:
+      - "${QDRANT_PORT:-7333}:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    env_file:
+      - ../backend/.env
+    environment:
+      - QDRANT__LOG_LEVEL=INFO
+      - QDRANT__SERVICE__HTTP_PORT=6333
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - simplerag-network
+
+  # ============================================
+  # Backend API 服务（FastAPI + LangGraph）
+  # ============================================
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    image: simplerag-api:latest
+    container_name: simplerag-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-7500}:7500"
+    volumes:
+      - ../backend/app:/app/app
+      - ../backend/main.py:/app/main.py
+      - ../backend/.env:/app/.env:ro
+      - ../knowledges:/app/knowledges
+    env_file:
+      - ../backend/.env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7500/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - simplerag-network
+
+  # ============================================
+  # Frontend Web UI（Vite + React，Nginx 承载）
+  # ============================================
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    image: simplerag-web:latest
+    container_name: simplerag-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - simplerag-network
+
+# ============================================
+# 网络配置
+# ============================================
+networks:
+  simplerag-network:
+    driver: bridge
+    name: simplerag-network
+
+# ============================================
+# 卷配置
+# ============================================
+volumes:
+  mysql_data:
+    name: simplerag-mysql-data
+  qdrant_data:
+    name: simplerag-qdrant-data

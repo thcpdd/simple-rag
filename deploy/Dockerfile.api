@@ -1,0 +1,52 @@
+# ============================================
+# SimpleRAG API — Dockerfile
+# 多阶段构建 (Builder → Runtime)
+# ============================================
+
+LABEL maintainer="SimpleRAG Team"
+LABEL description="SimpleRAG API - FastAPI + LangGraph RAG Service"
+
+# ============================================
+# Stage 1: Builder
+# ============================================
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl gcc g++ && rm -rf /var/lib/apt/lists/*
+
+RUN curl -LsSf https://uv.agentsmirror.com/install-cn.sh | sh && \
+    mv /root/.local/bin/uv /usr/local/bin/uv
+
+COPY backend/pyproject.toml backend/uv.lock backend/README.md ./
+
+COPY backend/app ./app
+COPY backend/main.py .
+
+RUN uv sync --frozen
+
+# ============================================
+# Stage 2: Runtime
+# ============================================
+FROM python:3.11-slim
+
+WORKDIR /app
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/app/.venv/bin:$PATH"
+
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app /app
+
+EXPOSE 7500
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:7500/health || exit 1
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7500"]

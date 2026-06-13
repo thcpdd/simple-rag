@@ -1,0 +1,55 @@
+# ============================================
+# SimpleRAG Web UI — Dockerfile
+# 三阶段构建 (Deps → Builder → Nginx)
+# Vite + React 静态 SPA，使用 Nginx 承载
+# ============================================
+
+LABEL maintainer="SimpleRAG Team"
+LABEL description="SimpleRAG Web UI - Vite + React Chat Interface"
+
+# ============================================
+# Stage 1: Dependencies
+# ============================================
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+RUN npm install -g pnpm
+
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+
+RUN pnpm install --frozen-lockfile
+
+# ============================================
+# Stage 2: Builder
+# ============================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+RUN npm install -g pnpm
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY frontend/ . .
+
+ENV NODE_ENV=production
+RUN pnpm build
+
+# ============================================
+# Stage 3: Runner (Nginx)
+# ============================================
+FROM nginx:alpine
+
+LABEL maintainer="SimpleRAG Team"
+LABEL description="SimpleRAG Web UI - Nginx Static Server"
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+COPY deploy/nginx-web.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:80 || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]
