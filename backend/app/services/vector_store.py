@@ -185,6 +185,7 @@ async def search(
     query_text: str,
     top_k: int | None = None,
     score_threshold: float | None = None,
+    kb_name: str = "",
 ) -> list[dict[str, Any]]:
     """在 Qdrant 中做混合检索（稠密向量 + BM25 稀疏向量，RRF 融合排序）。
 
@@ -199,6 +200,7 @@ async def search(
         query_text: 原始查询文本（用于 sparse 检索）
         top_k: 返回的最大结果数
         score_threshold: dense 检索的相似度阈值，低于此值的被过滤
+        kb_name: 知识库名称，不为空时只检索该知识库下的文档
 
     Returns:
         检索结果列表，每个元素包含:
@@ -213,6 +215,17 @@ async def search(
     top_k = top_k or settings.qdrant_top_k
     score_threshold = score_threshold if score_threshold is not None else settings.qdrant_score_threshold
 
+    filter_condition = None
+    if kb_name:
+        filter_condition = qdrant_models.Filter(
+            must=[
+                qdrant_models.FieldCondition(
+                    key="kb_name",
+                    match=qdrant_models.MatchValue(value=kb_name),
+                )
+            ]
+        )
+
     # 双路 prefetch + RRF 融合
     hits = await client.query_points(
         collection_name=collection_name,
@@ -222,11 +235,13 @@ async def search(
                 using="dense",
                 limit=top_k * 2,
                 score_threshold=score_threshold,
+                filter=filter_condition,
             ),
             Prefetch(
                 query=_text_to_sparse_vector(query_text),
                 using="sparse",
                 limit=top_k * 2,
+                filter=filter_condition,
             ),
         ],
         query=FusionQuery(fusion=Fusion.RRF),
@@ -242,6 +257,7 @@ async def search(
                 "subsection": point.payload.get("subsection", ""),
                 "content": point.payload.get("content", ""),
                 "score": round(point.score, 4),
+                "kb_name": point.payload.get("kb_name", ""),
             }
         )
 

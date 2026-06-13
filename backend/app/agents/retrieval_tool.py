@@ -20,7 +20,6 @@
 
 import logging
 
-from langchain_core.documents import Document
 from langchain_core.tools import tool
 
 from app.services.embedding import embed
@@ -32,7 +31,7 @@ MAX_QUERY_LENGTH = 500
 
 
 @tool
-async def retrieve_knowledge(query: str) -> str:
+async def retrieve_knowledge(query: str, kb_name: str = "") -> str:
     """当用户的提问超出了你当前知识库的能力范围时，
     可以调用此工具从知识库中检索相关文档片段。
 
@@ -40,6 +39,7 @@ async def retrieve_knowledge(query: str) -> str:
 
     Args:
         query: 用户的原始问题或需要查询的关键词
+        kb_name: 知识库名称（可选），指定后在对应知识库范围内检索
 
     Returns:
         格式化的知识片段列表，包含文档名称、章节标题和原文摘要。
@@ -54,11 +54,11 @@ async def retrieve_knowledge(query: str) -> str:
         logger.warning("查询超长，已截断至 %d 字", MAX_QUERY_LENGTH)
 
     # 1. 向量化查询
-    logger.info("检索知识库: \"%s\"", query[:50])
+    logger.info("检索知识库: \"%s\" (kb_name=%s)", query[:50], kb_name or "全部")
     query_vector = await embed(query)
 
     # 2. 混合检索：dense（语义）+ sparse（关键词，Qdrant 内置 BM25），RRF 融合排序
-    results = await search(query_vector, query_text=query)
+    results = await search(query_vector, query_text=query, kb_name=kb_name)
 
     # 3. 检索为空
     if not results:
