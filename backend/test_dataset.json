@@ -1,0 +1,208 @@
+[
+  {
+    "question": "Auperator 是什么系统？它的全称和核心目标是什么？",
+    "ground_truth": "Auperator（Automation Operator）是一个基于 DeepAgents 架构的智能运维系统。它的核心目标是解决传统运维系统的痛点——被动响应、依赖人工分析、修复周期长，通过引入 AI Agent 技术实现从问题发现到修复的全自动化闭环。系统支持 CLI 命令行模式和 Web UI 聊天界面双模式。",
+    "retrieved_contexts": [
+      "Auperator 是一个基于 DeepAgents 架构的智能运维系统，能够自动监控 Web 应用、收集日志、智能分析并修复问题，最终通过提交 PR 完成闭环修复。",
+      "Auperator 致力于解决传统运维系统中的痛点：被动响应、依赖人工分析、修复周期长。通过引入 AI Agent 技术，实现从问题发现到修复的全自动化闭环。",
+      "双界面模式：CLI 模式——命令行界面，用于日志消费和自动修复；Web UI 模式——基于 Next.js 的聊天界面，支持实时对话和事件流。"
+    ]
+  },
+  {
+    "question": "DeepAgents 架构中包含哪些子 Agent？它们各自的职责是什么？",
+    "ground_truth": "DeepAgents 架构包含 4 个子 Agent：(1) log_analysis（日志分析 Agent）——分析错误日志、查询 Qdrant 历史记忆、分类错误类型、评估严重程度、生成分析报告；(2) fix（代码修复 Agent）——定位问题代码、生成修复方案、安全修改代码、文档化变更；(3) validation（验证测试 Agent）——运行测试套件、检查代码质量、回归测试、修复效果评估；(4) pr（PR 管理 Agent）——生成 PR 描述、创建分支、提交代码、发起 Pull Request。它们由 Main Agent（编排器）统一协调，Main Agent 负责理解用户意图、任务分解分发、结果汇总呈现和实时事件推送。",
+    "retrieved_contexts": [
+      "DeepAgents 是 Auperator 的核心智能引擎，采用多 Agent 协作架构。",
+      "Main Agent（编排器）：理解用户意图，任务分解和分发，结果汇总和呈现，实时事件推送。",
+      "log_analysis（日志分析）：分析错误日志，定位问题，查询历史记忆（Qdrant），分类错误类型，评估严重程度，生成分析报告。",
+      "fix（代码修复）：实施代码修复，定位问题代码，生成修复方案，安全修改代码，文档化变更。",
+      "validation（验证测试）：验证修复有效性，运行测试套件，检查代码质量，回归测试，修复效果评估。",
+      "pr（PR 管理）：创建 Pull Request，生成 PR 描述，创建分支，提交代码，发起 PR。"
+    ]
+  },
+  {
+    "question": "Drain3 服务的工作原理是什么？有哪些关键配置参数？",
+    "ground_truth": "Drain3 是一个在线日志模板挖掘算法，它能从日志消息中提取固定模板并识别变量部分。例如，多条不同 IP 和端口的连接拒绝日志会被提取为模板 'ERROR: Connection refused to <IP>:<PORT>'。关键配置参数包括：DRAIN3_DEPTH=4（解析树深度）、DRAIN3_MAX_CLUSTERS=1000（最大聚类数）、DRAIN3_MAX_CHILDREN=100（每个节点最大子节点数）、DRAIN3_SIM_TH=0.4（相似度阈值）、DRAIN3_STATE_FILE=drain3.json（状态文件路径，用于持久化学习的模板，重启不丢失）。",
+    "retrieved_contexts": [
+      "Drain3 是一个在线日志模板挖掘算法，用于从日志消息中提取固定模板并识别变量部分。",
+      "原始日志：ERROR: Connection refused to 192.168.1.100:5432 → 提取后的模板：ERROR: Connection refused to <IP>:<PORT>",
+      "DRAIN3_DEPTH = 4（解析树深度），DRAIN3_MAX_CLUSTERS = 1000（最大聚类数），DRAIN3_MAX_CHILDREN = 100（每个节点最大子节点数），DRAIN3_SIM_TH = 0.4（相似度阈值），DRAIN3_STATE_FILE = drain3.json（状态文件路径）",
+      "Drain3 会将学习到的模板保存到 drain3.json，实现状态持久化。"
+    ]
+  },
+  {
+    "question": "Auperator 的事件系统包含哪些事件类型？底层使用什么技术实现？",
+    "ground_truth": "事件系统包含 4 种事件类型：USER（用户消息事件）、AGENT（Agent 响应事件）、ERROR（错误事件）、STATUS（状态更新事件）。底层基于 Redis Streams 实现事件驱动架构。核心组件是 EventCenter，负责事件发布、事件消费和消费者组管理。Redis Stream key 为 'auperator:events:all'，包含 3 个消费者组：web-ui（SSE 推送）、agent-worker（Agent 任务处理）、telegram（Telegram 通知）。",
+    "retrieved_contexts": [
+      "事件系统是 Auperator 的核心通信机制，基于 Redis Streams 实现事件驱动的架构。",
+      "事件类型：USER（用户消息事件）、AGENT（Agent 响应事件）、ERROR（错误事件）、STATUS（状态更新事件）。",
+      "EventCenter 负责事件发布（publish）、事件消费（consume）、消费者组管理。",
+      "Stream Key: auperator:events:all。消费者组：web-ui（Web UI SSE 推送）、agent-worker（Agent 任务处理）、telegram（Telegram 通知）。"
+    ]
+  },
+  {
+    "question": "Auperator 有哪些部署方式？Docker Compose 启动后包含哪些服务？",
+    "ground_truth": "Auperator 支持三种部署方式：完整启动（后端 + 前端 + Vector）、仅启动 Web UI、Docker 部署。Docker Compose 一键启动后包含以下服务：redis（Redis 7 Alpine，端口 6379）、qdrant（Qdrant 向量数据库，端口 6333）、api（Auperator API，端口 7000）、web（Next.js Web UI，端口 3000），以及可选的 vector（日志采集）。使用 'docker-compose --profile vector up -d' 可包含 Vector 服务。",
+    "retrieved_contexts": [
+      "完整启动（后端 + 前端 + Vector）：auperator server + vector --config vector.yaml + npm run dev + auperator start",
+      "仅启动 Web UI：auperator server + cd src/web && npm run dev",
+      "Docker Compose 服务：redis（6379，Redis 7 Alpine）、qdrant（6333，Qdrant 向量数据库）、api（7000，Auperator API）、web（3000，Next.js Web UI）、vector（日志采集，可选）",
+      "包含 Vector 日志采集：docker-compose --profile vector up -d"
+    ]
+  },
+  {
+    "question": "Auperator 的记忆服务如何使用？它有哪些分区？",
+    "ground_truth": "记忆服务基于 Qdrant 向量数据库，提供语义搜索能力，让 Agent 能够记住历史问题和解决方案。主要操作包括：save() 保存记忆、search() 按语义相似度搜索、search_weighted() 多分区加权检索。记忆条目分为 3 个分区：problems（问题描述，如'数据库连接超时问题'）、solutions（解决方案，如'增加连接池大小'）、context（上下文信息，如'项目使用 Django 3.2'）。嵌入模型使用 text-embedding-3-small，向量维度 1536，距离算法为 Cosine。",
+    "retrieved_contexts": [
+      "记忆服务基于 Qdrant 向量数据库，提供语义搜索能力，让 Agent 能够记住历史问题和解决方案。",
+      "分区：problems（问题描述，例如'数据库连接超时问题'）、solutions（解决方案，例如'增加连接池大小'）、context（上下文信息，例如'项目使用 Django 3.2'）",
+      "主要 API：save() 保存记忆、search() 按语义相似度搜索、search_weighted() 多分区加权检索。",
+      "Qdrant 配置：QDRANT_COLLECTION=auperator_memories，向量 size=1536，distance=Cosine。"
+    ]
+  },
+  {
+    "question": "Vector 在 Auperator 系统中起什么作用？它的配置包含哪些关键步骤？",
+    "ground_truth": "Vector 是日志采集工具，负责从 Docker 容器捕获日志并进行处理和发送。关键配置步骤：(1) Source 阶段——从 Docker 容器捕获日志；(2) Transform 阶段——merged_logs 进行多行日志聚合（合并 Python Traceback、Java Stack Trace 等多行错误），error_only_filter 按关键词（error、exception、traceback、critical、fatal、5xx 状态码）过滤错误日志；(3) Sink 阶段——通过 HTTP 发送到 Auperator API 的 /vector/ingest 端点，JSON 编码，批量发送（max_events=10，timeout_secs=5），重试 3 次。",
+    "retrieved_contexts": [
+      "使用专业的日志处理工具 Vector.dev 进行日志采集和处理。",
+      "多行日志聚合：自动合并多行错误日志（如 Python Traceback、Java Stack Trace）。",
+      "智能过滤：基于关键词和模式的错误日志过滤。",
+      "实时处理：流式处理，低延迟。结构化输出：统一的 JSON 格式输出。",
+      "Vector 配置 source 从 Docker 采集，transform 包括 merged_logs（多行聚合）和 error_only_filter（错误过滤），sink 发送到 HTTP API。",
+      "HTTP sink 配置：uri http://172.17.0.1:7000/vector/ingest，编码 JSON，批量 max_events=10，重试 3 次。"
+    ]
+  },
+  {
+    "question": "Auperator 包含哪些 Agent 执行后端？Daytona Sandbox 有什么特点？",
+    "ground_truth": "Auperator 包含 3 个执行后端：(1) Daytona Sandbox（默认）——安全的代码执行环境，特点包括隔离执行、可重现、支持多种语言，默认所有需要执行的代码都路由到此后端；(2) Local Shell——以 /local 开头的路径路由到此后端，用于访问本地文件系统，生产环境慎用；(3) Filesystem——负责文件读写操作，接口包括 read、write、edit、ls、glob、grep。",
+    "retrieved_contexts": [
+      "执行后端：Daytona Sandbox（默认，隔离执行、可重现、支持多种语言）、Local Shell（/local 路径，访问本地文件系统）、Filesystem（文件读写操作）",
+      "Daytona Sandbox 特点：隔离执行、可重现、支持多种语言。默认所有需要执行的代码路由到 Daytona。",
+      "Filesystem 接口：read, write, edit, ls, glob, grep。"
+    ]
+  },
+  {
+    "question": "Auperator 如何实现自动修复的完整流程？",
+    "ground_truth": "自动修复流程分为 5 个步骤：(1) 错误日志产生（如 'ERROR: Connection refused to 10.0.0.1:5432'）；(2) Vector 采集并发送结构化 JSON 日志到 API；(3) Drain3 提取日志模板（如提取为 'ERROR: Connection refused to <*:<:NUM:>>'），仅新模板才会推送到 Redis List；(4) Agent Worker 消费 Redis List 中的新模板日志并进行 Agent 处理——在 Daytona 沙箱中克隆代码、定位问题代码、实施修复、运行测试验证；(5) 提交 PR 完成修复闭环。整个流程通过多 Agent 协作完成：log_analysis → fix → validation → pr。",
+    "retrieved_contexts": [
+      "Auperator 致力于解决传统运维系统中的痛点，通过引入 AI Agent 技术，实现从问题发现到修复的全自动化闭环。",
+      "CLI 模式数据流：Vector 采集 Docker 容器日志 → Vector 过滤错误日志 → 发送到 Auperator API → Drain3 提取模板去重 → 推送到 Redis List → Agent Handler 消费并调用 Agent 修复",
+      "Agent 处理：分析错误原因 → 在 Daytona 沙箱中克隆代码 → 定位问题代码 → 实施修复 → 运行测试验证 → 提交 PR",
+      "多 Agent 协作：log_analysis → fix → validation → pr"
+    ]
+  },
+  {
+    "question": "Auperator Web UI 提供了哪些 API 端点？如何实现实时通信？",
+    "ground_truth": "Web UI 的 API 端点分为三类：(1) 聊天相关——POST/GET/DELETE /chat/conversations、POST /chat/messages、GET /chat/conversations/{id}/messages；(2) 事件流——POST /events/web-ui（SSE 端点，接收 Agent 实时事件）、POST /events/docker-logs（Docker 日志流）；(3) 记忆管理——GET /memory、POST /memory、GET /memory/search?q=query。实时通信基于 SSE（Server-Sent Events）实现。前端使用 EventSource 连接 SSE 端点，Agent 处理过程中实时推送中间状态（agent 事件，包含 event_type、content、agent_name）。",
+    "retrieved_contexts": [
+      "聊天 API：POST/GET /chat/conversations、PUT/DELETE /chat/conversations/{id}、POST /chat/messages、GET /chat/conversations/{id}/messages",
+      "事件流：POST /events/web-ui（SSE，事件格式包含 event_type、content、agent_name）、POST /events/docker-logs",
+      "记忆管理：GET /memory、POST /memory、GET /memory/search?q=query",
+      "实时通信基于 SSE，Agent 处理过程中会实时推送中间状态。",
+      "前端使用 EventSource 连接 SSE，接收 agent 事件并实时显示。"
+    ]
+  },
+  {
+    "question": "智能抢课系统有哪些核心特点？和普通代码选课相比有什么优势？",
+    "ground_truth": "智能抢课系统有 3 个核心特点：(1) 自动获取选课参数——用户只需传入账号密码和意向课程，系统自动完成选课参数获取和选课逻辑；(2) 支持多人选课——内部使用消息队列同时处理多个选课任务；(3) 内部自动处理异常——自动重试（最多重试 3 次）、异常捕获等。额外亮点包括：易于普通用户使用的操作界面、支持提前提交选课任务（系统自动判断选课时间）、支持查看选课进度、管理员可后台监听所有选课进度、显示课程已选择人数、支持无密码选课。",
+    "retrieved_contexts": [
+      "自动获取选课参数：只需要传入账号密码、意向课程就行了，剩下的工作选课系统会自己帮你完成。",
+      "支持多人选课：内部使用了消息队列来同时处理多个选课任务。",
+      "内部自动处理异常：在代码层面自动处理。",
+      "易于普通用户使用的操作界面、支持提前提交选课任务、支持查询选课进度、后台可监听所有选课任务进度、显示课程的已选择人数、不使用账号密码也能选课。"
+    ]
+  },
+  {
+    "question": "课程选择器的类继承关系是怎样的？最终应该调用哪个选择器？",
+    "ground_truth": "课程选择器的继承关系为：BaseCourseSelector（基类）→ AsyncCourseSelector（异步选择器）→ 派生出 AsyncPCSelector（异步公选课选择器）和 AsyncPESelector（异步体育课选择器）。BaseCourseSelector 是所有选择器的基类，定义了 30 多个属性和模板方法，并实现了异步上下文管理器接口。AsyncCourseSelector 实现了公用方法如 select、set_jxb_ids。外部调用者应该调用 AsyncPCSelector（公选课）或 AsyncPESelector（体育课），因为只有它们实现了完整的选课逻辑。",
+    "retrieved_contexts": [
+      "BaseCourseSelector 是所有课程选择器的基类，规定了标准课程选择器应有的属性和方法。",
+      "AsyncCourseSelector 是 BaseCourseSelector 的派生类，实现了异步选择器的公用方法。",
+      "AsyncPCSelector：异步公选课课程选择器，专门实现公选课选课逻辑。",
+      "AsyncPESelector：异步体育课课程选择器，专门实现体育课选课逻辑。",
+      "外部调用者应该调用 AsyncPCSelector 或 AsyncPESelector，因为只有它们实现了完整的选课逻辑。"
+    ]
+  },
+  {
+    "question": "项目中有哪些实现并发的方案？最终选择了哪个框架？为什么？",
+    "ground_truth": "项目考虑了三种并发方案：多进程（适合 CPU 密集型，但选课是 IO 密集型，且受 GIL 限制）、多线程（适合 IO 密集型，但线程过多会导致上下文切换开销大）、协程（轻量级，用户态调度，切换快，一个协程就能实现并发）。最终基于协程选择了 arq 框架作为消息队列。arq 完全基于 Redis 实现消息队列，使用 Python 协程实现并发，支持定时任务、延时任务、任务重试等基本功能，且是轻量级框架，基于 Redis 的 zset 实现延时任务队列。项目曾排除 Celery（不支持异步函数）、Dramatiq（多线程实现）、Taskiq（使用复杂且缺少所需功能）。",
+    "retrieved_contexts": [
+      "多进程：适合 CPU 密集型，但选课是 IO 密集型，且受 GIL 限制。",
+      "多线程：适合 IO 密集型任务，但创建过多线程会导致上下文切换耗时。",
+      "协程：轻量级线程，用户态调度，切换快，一个协程就能实现并发。",
+      "最终选择 arq：完全基于 Redis 实现消息队列，使用 Python 协程实现并发，支持定时/延时/重试任务。",
+      "arq 基于 Redis 的有序集合（zset）实现延时任务队列。",
+      "排除了 Celery（不支持异步函数）、Dramatiq（多线程实现）、Taskiq（使用复杂）。"
+    ]
+  },
+  {
+    "question": "项目为什么将数据库从 MySQL 改为 MongoDB？",
+    "ground_truth": "有两个主要原因：(1) 项目数据量小——MySQL 适合大数据量、高并发的场景，但该项目不具备这些特点，使用 MySQL 会浪费资源；MongoDB 相对更轻量，更符合项目特点；(2) 不需要维护 SQL 语句——使用 MySQL 要么引入 ORM 框架增加复杂度，要么手动维护 SQL 语句面临 SQL 注入风险；MongoDB 操作更简洁，不需要这些复杂操作。项目对 MongoDB 进行了二次封装（在 /snatcher/storage/mongo 下），封装灵感来源于 Django 框架的 connections 和 caches 设计模式。",
+    "retrieved_contexts": [
+      "项目早期使用 MySQL，后改用 MongoDB。原因一：项目数据量小，MySQL 适合大数据量场景，MongoDB 更轻量。",
+      "原因二：不需要维护 SQL 语句。使用 MySQL 要么引入 ORM 框架增加复杂度，要么手动维护 SQL 面临 SQL 注入风险。",
+      "MongoDB 操作更简洁，封装灵感来源于 Django 的 connections 和 caches 设计模式。"
+    ]
+  },
+  {
+    "question": "会话管理模块提供了哪些核心函数？如何使用它们来登录和获取会话？",
+    "ground_truth": "会话管理模块提供两个核心函数：(1) get_session_manager——以 LRU 缓存形式获取学号对应的SessionManager，内部管理 Redis 连接池，提供 Cookie 的增删改查和 xkkz_id 管理；(2) async_check_and_set_session——检查并设置会话，如果缓存中没有当前学号的有效 Cookie 则模拟登录并保存，否则直接返回。登录成功返回 1，失败返回 -1。使用方式：asyncio.run(async_check_and_set_session(username, password))。SessionManager 使用了代理模式，底层操作 Redis。get_session_manager 使用 lru_cache 装饰器避免重复创建连接池，提高资源利用率。",
+    "retrieved_contexts": [
+      "get_session_manager：以 LRU 缓存的形式获取学号对应的会话管理器。",
+      "async_check_and_set_session：检查并设置会话。缓存中没有有效 Cookie 时模拟登录并保存，有则直接返回。登录成功返回 1，失败返回 -1。",
+      "SessionManager 使用了代理模式，底层操作 Redis。",
+      "asyncio.run(async_check_and_set_session(username, password))"
+    ]
+  },
+  {
+    "question": "邮件模块包含哪些邮件发送器？它们之间的继承关系和使用场景是什么？",
+    "ground_truth": "邮件发送器的继承关系：AbstractEmailSender（抽象基类，定义 send 抽象方法）→ SMTPEmailSender（基于 SMTP 协议）→ 派生出 HTMLEmailSender（发送 HTML 类型邮件）和 TextEmailSender（发送文本类型邮件）；AbstractEmailSender 也派生出 TencentCloudEmailSender（使用腾讯云服务发送邮件）。使用场景：选课失败的邮件使用 TextEmailSender（文本类型）；选课成功的邮件，若配置了腾讯云则使用 TencentCloudEmailSender，否则使用 HTMLEmailSender。系统使用工厂方法模式（EmailSenderFactory）和统一的 send_email 函数来获取合适的发送器。",
+    "retrieved_contexts": [
+      "AbstractEmailSender（抽象基类）→ SMTPEmailSender → HTMLEmailSender 和 TextEmailSender",
+      "AbstractEmailSender → TencentCloudEmailSender",
+      "选课失败使用 TextEmailSender（文本类型），选课成功使用 TencentCloudEmailSender（若配置）或 HTMLEmailSender",
+      "使用工厂方法模式（EmailSenderFactory）和统一的 send_email 函数。"
+    ]
+  },
+  {
+    "question": "缓存模块如何实现选课日志的发布和记录？日志消息的格式是怎样的？",
+    "ground_truth": "缓存模块基于 Redis 实现，关键组件包括：(1) AsyncRuntimeLogger——异步运行时日志记录器，使用代理模式，底层操作 Redis 哈希数据类型，设计为异步上下文管理器；(2) publish_message——异步装饰器，在日志频道中发布消息，适用于 AsyncRuntimeLogger 的特定方法；(3) logging——装饰器，用于课程选择器的 set_kch_id、set_xkkz_id、set_jxb_ids、select_course 方法，通过方法名自动判断日志类型，实现选择器逻辑和日志逻辑的解耦。日志消息格式：'username-course_name|message_name|message'，由学号和课程名构成的日志键、消息名称、消息详细内容三部分组成。",
+    "retrieved_contexts": [
+      "AsyncRuntimeLogger：异步运行时日志记录器，使用代理模式，底层操作 Redis 哈希数据类型。",
+      "publish_message：异步装饰器，在消息频道中发布日志消息。",
+      "logging 装饰器：用于 set_kch_id、set_xkkz_id、set_jxb_ids、select_course 方法，自动判断日志类型。",
+      "消息格式：'username-course_name|message_name|message'"
+    ]
+  },
+  {
+    "question": "智能抢课系统支持哪几种登录方式？抢课码有什么作用？",
+    "ground_truth": "系统支持两种登录方式：(1) 账号密码登录——用户输入学号和密码，系统自动模拟登录并保存 Cookie，选课前可提前调用 async_check_and_set_session 预登录，选课时跳过登录步骤；(2) 抢课码登录——联系管理员获取抢课码，不使用账号密码也能完成选课。抢课码的作用：作为查询选课进度的凭证。在缓存模块的 export_progress 函数中，通过抢课码 ID（fuel_id）过滤出该码对应的所有日志，排序后整理出用户的选课进度。每条日志记录包括最后一次尝试的进度和重试次数。",
+    "retrieved_contexts": [
+      "登录方式：使用账号密码登录、使用抢课码（联系管理员获取）登录。",
+      "不使用账号密码也能选课。",
+      "抢课码 ID（fuel_id）用于在选课日志中标识用户，通过 export_progress 函数查询选课进度。",
+      "export_progress：通过 fuel_id 过滤日志，按 index 排序，整理出用户的选课进度（最后一次进度和尝试次数）。"
+    ]
+  },
+  {
+    "question": "如何手动调用课程选择器？SimpleSelectorPerformer 如何使用？",
+    "ground_truth": "手动调用课程选择器的标准方法：使用异步上下文管理器创建选择器对象，调用 update_selector_info 更新课程信息，再调用 select 方法执行选课。示例代码：async with AsyncPCSelector(args, kwargs) as selector: await selector.update_selector_info(args, kwargs); await selector.select()。SimpleSelectorPerformer 是简单选择器执行器，被称为'迷你智能抢课系统'，只需传入用户名、密码、选择器类、意向课程列表即可。使用方式：performer = SimpleSelectorPerformer(username, password, AsyncPESelector, goals); performer.perform()。注意选择器类不需要加括号，且主机需要安装 Redis 环境。",
+    "retrieved_contexts": [
+      "手动调用：async with AsyncPCSelector(args, kwargs) as selector: await selector.update_selector_info(...); await selector.select()",
+      "SimpleSelectorPerformer：简单选择器执行器，'迷你智能抢课系统'，自动调用选择器并输出日志。",
+      "使用示例：performer = SimpleSelectorPerformer(username, password, AsyncPESelector, goals); performer.perform()",
+      "选择器类不需要加括号，主机需要安装 Redis 环境。"
+    ]
+  },
+  {
+    "question": "Arq 框架的延时任务是如何实现的？选课任务的生产-消费流程是怎样的？",
+    "ground_truth": "Arq 基于 Redis 的有序集合（zset）实现延时任务队列——以时间戳作为集合的权重，循环判断时间戳是否到达预定时间，到达则执行任务。选课任务的生产-消费流程：(1) 后端调用 select_course 函数，先提前模拟登录并保存登录信息，再发送一个延时选课任务到队列；(2) 到达预定时间后 select_course_task 任务被触发，根据任务类型获取对应的课程选择器，将参数传给选择器执行器执行选课逻辑；(3) 期间任意关键步骤失败会记录失败信息并重试，最大重试 3 次，超过则判定选课失败。此外还有定时任务 query_selected_number_task 轮询查询课程的已选择人数，保存到缓存中供前端展示。",
+    "retrieved_contexts": [
+      "arq 基于 Redis 的有序集合（zset）实现延时任务队列，以时间戳作为权重，循环判断时间戳是否到达预定时间。",
+      "select_course：Arq 任务，由后端调用，提前模拟登录并发送延时选课任务。",
+      "select_course_task：Arq 任务，根据任务类型获取选择器，由执行器执行选课逻辑。",
+      "query_selected_number_task：定时任务，轮询查询课程已选择人数，保存到缓存。",
+      "失败后重试，最大重试次数 3 次，超过则判定选课失败。"
+    ]
+  }
+]
