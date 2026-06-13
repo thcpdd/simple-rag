@@ -45,7 +45,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-slate-100">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50/30">
       {/* Decorative background orbs */}
       <div className="gradient-orb w-[500px] h-[500px] bg-indigo-400/10 -top-48 -right-48" />
       <div className="gradient-orb w-[400px] h-[400px] bg-blue-400/10 -bottom-32 -left-32" />
@@ -54,16 +54,16 @@ export default function RegisterPage() {
       <div className="w-full max-w-md animate-fade-in-up">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-2.5 shadow-lg shadow-blue-500/20">
+          <div className="rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-2.5 shadow-lg shadow-blue-500/20 ring-1 ring-white/20">
             <MessageSquare className="h-6 w-6 text-white" />
           </div>
-          <span className="text-xl font-semibold text-slate-800">AI 智能客服</span>
+          <span className="font-heading text-xl font-semibold text-slate-800">AI 智能客服</span>
         </div>
 
         {/* Card */}
-        <Card className="border-slate-200/60 shadow-xl shadow-slate-200/50 backdrop-blur-sm">
+        <Card className="border-slate-200/60 shadow-2xl shadow-slate-200/70 backdrop-blur-sm">
           <CardHeader className="space-y-1.5 pb-6">
-            <CardTitle className="text-2xl text-center text-slate-800">创建账号</CardTitle>
+            <CardTitle className="font-heading text-2xl text-center text-slate-800">创建账号</CardTitle>
             <CardDescription className="text-center text-slate-500">
               创建您的账号以使用 AI 智能客服
             </CardDescription>
@@ -71,7 +71,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-5">
               {error && (
-                <div className="bg-red-50 border border-red-100 text-red-600 text-sm p-3 rounded-lg animate-scale-in flex items-center gap-2">
+                <div className="bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 text-sm p-3 rounded-lg animate-scale-in flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
                   {error}
                 </div>
@@ -81,7 +81,7 @@ export default function RegisterPage() {
                   邮箱
                 </Label>
                 <div className="relative group">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-200" />
                   <Input
                     id="email"
                     type="email"
@@ -90,7 +90,7 @@ export default function RegisterPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     autoFocus
-                    className="pl-10 h-11 bg-white border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                    className="pl-10 h-11 bg-white/80 border-slate-200 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
                   />
                 </div>
               </div>
@@ -99,7 +99,7 @@ export default function RegisterPage() {
                   密码
                 </Label>
                 <div className="relative group">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-200" />
                   <Input
                     id="password"
                     type="password"
@@ -108,7 +108,7 @@ export default function RegisterPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
-                    className="pl-10 h-11 bg-white border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                    className="pl-10 h-11 bg-white/80 border-slate-200 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
                   />
                 </div>
               </div>
@@ -117,7 +117,7 @@ export default function RegisterPage() {
                   确认密码
                 </Label>
                 <div className="relative group">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-200" />
                   <Input
                     id="confirm-password"
                     type="password"
@@ -125,7 +125,7 @@ export default function RegisterPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    className="pl-10 h-11 bg-white border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                    className="pl-10 h-11 bg-white/80 border-slate-200 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
                   />
                 </div>
               </div>
@@ -133,7 +133,7 @@ export default function RegisterPage() {
             <CardFooter className="flex flex-col gap-4 pb-6">
               <Button
                 type="submit"
-                className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg shadow-blue-500/20 transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98]"
+                className="w-full h-11 bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98]"
                 disabled={loading}
               >
                 {loading ? (

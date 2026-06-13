@@ -36,25 +36,25 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC]">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50/90 to-white">
       {/* Sidebar */}
       <aside
-        className={`flex flex-col border-r border-slate-200/80 bg-white transition-all duration-300 ease-in-out ${
+        className={`flex flex-col border-r border-slate-200/70 bg-white/95 backdrop-blur-sm transition-all duration-300 ease-in-out ${
           collapsed ? 'w-16' : 'w-60'
         } shrink-0`}
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 h-16 shrink-0">
-          <div className="rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-2 shadow-md shadow-blue-500/20 shrink-0">
+          <div className="rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-2 shadow-md shadow-blue-500/20 shrink-0 ring-1 ring-white/20">
             <MessageSquare className="h-5 w-5 text-white" />
           </div>
           <div className={`overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-            <span className="font-semibold text-sm text-slate-800 whitespace-nowrap">AI 智能客服</span>
+            <span className="font-heading font-semibold text-sm text-slate-800 whitespace-nowrap">AI 智能客服</span>
           </div>
         </div>
 
         <div className="px-3">
-          <Separator className="bg-slate-100" />
+          <Separator className="bg-slate-100/80" />
         </div>
 
         {/* Navigation */}
@@ -67,7 +67,7 @@ export default function AppLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700 font-medium'
+                    ? 'bg-blue-50/80 text-blue-700 font-medium shadow-sm'
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                 } ${collapsed ? 'justify-center px-2' : ''}`
               }
@@ -76,10 +76,10 @@ export default function AppLayout() {
                 <>
                   {/* Active indicator bar */}
                   {isActive && !collapsed && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-blue-600 rounded-full" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-blue-600 rounded-full shadow-sm shadow-blue-600/30" />
                   )}
-                  <item.icon className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
-                    isActive ? 'scale-110' : 'group-hover:scale-105'
+                  <item.icon className={`h-4 w-4 shrink-0 transition-all duration-200 ${
+                    isActive ? 'scale-110 text-blue-600' : 'group-hover:scale-105'
                   }`} />
                   {!collapsed && (
                     <span className="truncate">{item.label}</span>
@@ -91,7 +91,7 @@ export default function AppLayout() {
         </nav>
 
         <div className="px-3">
-          <Separator className="bg-slate-100" />
+          <Separator className="bg-slate-100/80" />
         </div>
 
         {/* Collapse toggle */}
@@ -116,7 +116,7 @@ export default function AppLayout() {
         </div>
 
         {/* User */}
-        <div className="p-2.5 border-t border-slate-100">
+        <div className="p-2.5 border-t border-slate-100/80">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -125,7 +125,7 @@ export default function AppLayout() {
                   collapsed ? 'px-0 justify-center' : 'justify-start gap-2.5 px-3'
                 }`}
               >
-                <Avatar className="h-7 w-7 ring-2 ring-slate-100 ring-offset-1">
+                <Avatar className="h-7 w-7 ring-2 ring-slate-100 ring-offset-2">
                   <AvatarFallback className="text-xs font-medium bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
                     {userEmail.charAt(0).toUpperCase()}
                   </AvatarFallback>
@@ -142,9 +142,9 @@ export default function AppLayout() {
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" side="right" className="w-52 p-1.5">
+            <DropdownMenuContent align="end" side="right" className="w-52 p-1.5 rounded-xl border-slate-200/70 shadow-xl">
               <div className="flex items-center gap-3 px-2 py-2 mb-1">
-                <Avatar className="h-9 w-9">
+                <Avatar className="h-9 w-9 ring-2 ring-slate-100">
                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-sm">
                     {userEmail.charAt(0).toUpperCase()}
                   </AvatarFallback>

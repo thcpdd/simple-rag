@@ -218,11 +218,11 @@ export default function KnowledgePage() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-white/95">
       {/* Header */}
-      <div className="px-6 py-4 flex items-center justify-between shrink-0 border-b border-slate-100">
+      <div className="px-6 py-4 flex items-center justify-between shrink-0 border-b border-slate-100 bg-gradient-to-r from-white via-white to-slate-50/50">
         <div>
-          <h1 className="text-lg font-semibold text-slate-800">知识库管理</h1>
+          <h1 className="font-heading text-lg font-semibold text-slate-800">知识库管理</h1>
           <p className="text-sm text-slate-500 mt-0.5">
             管理知识库文档，支持 .txt 和 .md 格式
           </p>
@@ -241,7 +241,7 @@ export default function KnowledgePage() {
             <DialogTrigger asChild>
               <Button
                 size="sm"
-                className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm shadow-blue-200 transition-all duration-200"
+                className="bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 text-white shadow-sm shadow-blue-200 transition-all duration-200"
               >
                 <Upload className="h-4 w-4 mr-1.5" />
                 上传文档
@@ -249,14 +249,14 @@ export default function KnowledgePage() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle className="text-slate-800">上传知识文档</DialogTitle>
+                <DialogTitle className="font-heading text-slate-800">上传知识文档</DialogTitle>
                 <DialogDescription>
                   支持 .txt 和 .md 格式，单文件最大 10MB
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-2">
                 {uploadError && (
-                  <div className="bg-red-50 border border-red-100 text-red-600 text-sm p-3 rounded-lg flex items-center gap-2 animate-scale-in">
+                  <div className="bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 text-sm p-3 rounded-lg flex items-center gap-2 animate-scale-in">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     {uploadError}
                   </div>
@@ -319,10 +319,10 @@ export default function KnowledgePage() {
                 <div
                   className={`relative border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-200 ${
                     dragOver
-                      ? 'border-blue-400 bg-blue-50/50 scale-[1.01]'
+                      ? 'border-blue-400 bg-blue-50/60 scale-[1.01]'
                       : uploadFile
-                        ? 'border-blue-300 bg-blue-50/30'
-                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                        ? 'border-blue-300 bg-blue-50/40'
+                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/60'
                   }`}
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={handleDragOver}
@@ -331,7 +331,7 @@ export default function KnowledgePage() {
                 >
                   {uploadFile ? (
                     <div className="space-y-3">
-                      <div className="rounded-full bg-blue-100 w-14 h-14 flex items-center justify-center mx-auto">
+                      <div className="rounded-full bg-blue-100 w-14 h-14 flex items-center justify-center mx-auto shadow-sm">
                         <FileText className="h-6 w-6 text-blue-600" />
                       </div>
                       <div>
@@ -390,7 +390,7 @@ export default function KnowledgePage() {
                 <Button
                   onClick={handleUpload}
                   disabled={!uploadFile || uploading || (useNewKb ? !newKbName.trim() : !uploadKb)}
-                  className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 transition-all duration-200"
                 >
                   {uploading ? (
                     <>
@@ -411,14 +411,14 @@ export default function KnowledgePage() {
       </div>
 
       {/* 知识库标签栏 */}
-      <div className="px-6 py-3 shrink-0 border-b border-slate-100 bg-slate-50/30">
+      <div className="px-6 py-3 shrink-0 border-b border-slate-100 bg-slate-50/40">
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => handleBaseChange('')}
-            className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+            className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
               selectedBase === ''
-                ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                ? 'bg-blue-600 text-white shadow-sm shadow-blue-200 ring-1 ring-blue-700/20'
+                : 'bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-800 border border-slate-200 hover:border-slate-300'
             }`}
           >
             全部
@@ -430,10 +430,10 @@ export default function KnowledgePage() {
             <button
               key={base.name}
               onClick={() => handleBaseChange(base.name)}
-              className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
                 selectedBase === base.name
-                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-200 ring-1 ring-blue-700/20'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-800 border border-slate-200 hover:border-slate-300'
               }`}
             >
               <FolderOpen className="h-3.5 w-3.5" />
@@ -450,13 +450,13 @@ export default function KnowledgePage() {
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-14 w-full rounded-lg bg-slate-100" />
+                <Skeleton key={i} className="h-14 w-full rounded-lg bg-slate-100/80" />
               ))}
             </div>
           ) : docs.length === 0 ? (
-            <Card className="border-slate-100 shadow-sm">
+            <Card className="border-slate-100 shadow-sm bg-white/50 backdrop-blur-sm">
               <CardContent className="flex flex-col items-center justify-center py-16">
-                <div className="rounded-full bg-slate-50 w-16 h-16 flex items-center justify-center mb-4">
+                <div className="rounded-full bg-gradient-to-br from-slate-50 to-slate-100 w-16 h-16 flex items-center justify-center mb-4 shadow-sm">
                   <FileText className="h-7 w-7 text-slate-300" />
                 </div>
                 <p className="text-slate-600 font-medium mb-1">
@@ -467,7 +467,7 @@ export default function KnowledgePage() {
                 </p>
                 <Button
                   onClick={() => setUploadOpen(true)}
-                  className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-sm shadow-blue-200 transition-all duration-200"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 shadow-sm shadow-blue-200 transition-all duration-200"
                 >
                   <Upload className="h-4 w-4 mr-1.5" />
                   上传文档
@@ -475,26 +475,26 @@ export default function KnowledgePage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+                  <TableRow className="bg-slate-50/90 hover:bg-slate-50/90">
                     {!selectedBase && (
-                      <TableHead className="text-slate-600 font-medium text-xs uppercase tracking-wider">知识库</TableHead>
+                      <TableHead className="text-slate-500 font-semibold text-xs uppercase tracking-wider">知识库</TableHead>
                     )}
-                    <TableHead className="text-slate-600 font-medium text-xs uppercase tracking-wider">文件名</TableHead>
-                    <TableHead className="text-slate-600 font-medium text-xs uppercase tracking-wider">大小</TableHead>
-                    <TableHead className="text-slate-600 font-medium text-xs uppercase tracking-wider">状态</TableHead>
-                    <TableHead className="text-slate-600 font-medium text-xs uppercase tracking-wider">向量数量</TableHead>
-                    <TableHead className="text-slate-600 font-medium text-xs uppercase tracking-wider">上传时间</TableHead>
-                    <TableHead className="w-20 text-slate-600 font-medium text-xs uppercase tracking-wider">操作</TableHead>
+                    <TableHead className="text-slate-500 font-semibold text-xs uppercase tracking-wider">文件名</TableHead>
+                    <TableHead className="text-slate-500 font-semibold text-xs uppercase tracking-wider">大小</TableHead>
+                    <TableHead className="text-slate-500 font-semibold text-xs uppercase tracking-wider">状态</TableHead>
+                    <TableHead className="text-slate-500 font-semibold text-xs uppercase tracking-wider">向量数量</TableHead>
+                    <TableHead className="text-slate-500 font-semibold text-xs uppercase tracking-wider">上传时间</TableHead>
+                    <TableHead className="w-20 text-slate-500 font-semibold text-xs uppercase tracking-wider">操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {docs.map((doc) => (
                     <TableRow
                       key={doc.id}
-                      className="hover:bg-slate-50/50 transition-colors duration-150"
+                      className="hover:bg-slate-50/70 transition-colors duration-150 border-b border-slate-100 last:border-0"
                     >
                       {!selectedBase && (
                         <TableCell>
@@ -516,7 +516,7 @@ export default function KnowledgePage() {
                         {formatFileSize(doc.file_size)}
                       </TableCell>
                       <TableCell>{getStatusBadge(doc.status)}</TableCell>
-                      <TableCell className="text-slate-700">{doc.chunk_count}</TableCell>
+                      <TableCell className="text-slate-700 tabular-nums">{doc.chunk_count}</TableCell>
                       <TableCell className="text-slate-400 text-sm">
                         {formatDate(doc.created_at)}
                       </TableCell>
@@ -539,7 +539,7 @@ export default function KnowledgePage() {
                                   <AlertTriangle className="h-5 w-5 text-red-500" />
                                 </div>
                                 <div>
-                                  <DialogTitle className="text-slate-800">确认删除</DialogTitle>
+                                  <DialogTitle className="font-heading text-slate-800">确认删除</DialogTitle>
                                   <DialogDescription className="mt-1">
                                     此操作不可撤销
                                   </DialogDescription>
