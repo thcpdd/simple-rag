@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { api, type KnowledgeDocResponse, type KnowledgeBaseItem } from '@/lib/api'
+import { api, type KnowledgeDocResponse, type KnowledgeBaseResponse, type KnowledgeBaseCreate, type KnowledgeBaseUpdate } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -43,6 +44,10 @@ import {
   AlertTriangle,
   FolderOpen,
   Plus,
+  Settings2,
+  Pencil,
+  BookOpen,
+  Tag,
 } from 'lucide-react'
 
 function formatFileSize(bytes: number): string {
@@ -86,21 +91,34 @@ function getStatusBadge(status: string) {
 export default function KnowledgePage() {
   const [docs, setDocs] = useState<KnowledgeDocResponse[]>([])
   const [loading, setLoading] = useState(true)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // ─── 上传状态 ───
   const [uploadOpen, setUploadOpen] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadFile, setUploadFile] = useState<File | null>(null)
-  const [uploadKb, setUploadKb] = useState('')
-  const [newKbName, setNewKbName] = useState('')
-  const [useNewKb, setUseNewKb] = useState(false)
+  const [uploadKbId, setUploadKbId] = useState('')
   const [uploadError, setUploadError] = useState('')
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // 知识库列表状态
-  const [bases, setBases] = useState<KnowledgeBaseItem[]>([])
+  // ─── 知识库列表状态 ───
+  const [bases, setBases] = useState<KnowledgeBaseResponse[]>([])
   const [selectedBase, setSelectedBase] = useState<string>('')
+
+  // ─── 知识库管理状态 ───
+  const [manageOpen, setManageOpen] = useState(false)
+  const [kbFormOpen, setKbFormOpen] = useState(false)
+  const [editingKb, setEditingKb] = useState<KnowledgeBaseResponse | null>(null)
+  const [formName, setFormName] = useState('')
+  const [formDesc, setFormDesc] = useState('')
+  const [formKeywords, setFormKeywords] = useState('')
+  const [formError, setFormError] = useState('')
+  const [formSaving, setFormSaving] = useState(false)
+
+  // ─── 删除知识库状态 ───
+  const [deleteKb, setDeleteKb] = useState<KnowledgeBaseResponse | null>(null)
+  const [deletingKb, setDeletingKb] = useState(false)
 
   const stopPoll = useCallback(() => {
     if (pollRef.current) {
@@ -111,8 +129,8 @@ export default function KnowledgePage() {
 
   const loadBases = useCallback(async () => {
     try {
-      const data = await api.get<{ total: number; items: KnowledgeBaseItem[] }>('/knowledge/bases')
-      setBases(data.items || [])
+      const data = await api.get<KnowledgeBaseResponse[]>('/knowledge/bases/detail')
+      setBases(data || [])
     } catch {
       // ignore
     }
@@ -121,7 +139,16 @@ export default function KnowledgePage() {
   const loadDocs = useCallback(async () => {
     setLoading(true)
     try {
-      const params = selectedBase ? `?knowledge_base=${encodeURIComponent(selectedBase)}` : ''
+      // 如果 selectedBase 有值，找到对应 KB 的 id
+      let params = ''
+      if (selectedBase) {
+        const kb = bases.find(b => b.name === selectedBase)
+        if (kb) {
+          params = `?kb_id=${kb.id}`
+        } else {
+          params = `?knowledge_base=${encodeURIComponent(selectedBase)}`
+        }
+      }
       const data = await api.get<{ total: number; items: KnowledgeDocResponse[] }>(`/knowledge/list${params}`)
       setDocs(data.items || [])
       if (!data.items?.some(d => d.status === 'processing')) {
@@ -132,7 +159,7 @@ export default function KnowledgePage() {
     } finally {
       setLoading(false)
     }
-  }, [selectedBase, stopPoll])
+  }, [selectedBase, stopPoll, bases])
 
   // 组件卸载时停止轮询
   useEffect(() => {
@@ -146,30 +173,25 @@ export default function KnowledgePage() {
 
   useEffect(() => {
     loadDocs()
-  }, [loadDocs])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBase])
 
+  // ─── 上传 ───
   const handleUpload = async () => {
-    if (!uploadFile) return
-    const kbName = useNewKb ? newKbName.trim() : uploadKb
-    if (!kbName) {
-      setUploadError('请选择或输入知识库名称')
-      return
-    }
+    if (!uploadFile || !uploadKbId) return
 
     setUploadError('')
     setUploading(true)
 
     const formData = new FormData()
     formData.append('file', uploadFile)
-    formData.append('knowledge_base', kbName)
+    formData.append('kb_id', uploadKbId)
 
     try {
       await api.upload('/knowledge/upload', formData)
       setUploadOpen(false)
       setUploadFile(null)
-      setUploadKb('')
-      setNewKbName('')
-      setUseNewKb(false)
+      setUploadKbId('')
       loadBases()
       loadDocs()
       stopPoll()
@@ -181,6 +203,8 @@ export default function KnowledgePage() {
     }
   }
 
+  // ─── 删除文档 ───
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
   const handleDelete = async (docId: number) => {
     try {
       await api.delete(`/knowledge/${docId}`)
@@ -192,15 +216,12 @@ export default function KnowledgePage() {
     }
   }
 
+  // ─── 拖拽 ───
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(true)
   }
-
-  const handleDragLeave = () => {
-    setDragOver(false)
-  }
-
+  const handleDragLeave = () => setDragOver(false)
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
@@ -210,6 +231,72 @@ export default function KnowledgePage() {
       setUploadError('')
     } else {
       setUploadError('只支持 .txt 和 .md 格式的文件')
+    }
+  }
+
+  // ─── KB 管理 ───
+  const openCreateForm = () => {
+    setEditingKb(null)
+    setFormName('')
+    setFormDesc('')
+    setFormKeywords('')
+    setFormError('')
+    setKbFormOpen(true)
+  }
+
+  const openEditForm = (kb: KnowledgeBaseResponse) => {
+    setEditingKb(kb)
+    setFormName(kb.name)
+    setFormDesc(kb.description || '')
+    setFormKeywords(kb.keywords || '')
+    setFormError('')
+    setKbFormOpen(true)
+  }
+
+  const handleKbFormSubmit = async () => {
+    const name = formName.trim()
+    if (!name) {
+      setFormError('请输入知识库名称')
+      return
+    }
+    setFormError('')
+    setFormSaving(true)
+    try {
+      if (editingKb) {
+        const data: KnowledgeBaseUpdate = { name }
+        if (formDesc) data.description = formDesc
+        if (formKeywords) data.keywords = formKeywords
+        await api.put(`/knowledge/bases/${editingKb.id}`, data)
+      } else {
+        const data: KnowledgeBaseCreate = { name }
+        if (formDesc) data.description = formDesc
+        if (formKeywords) data.keywords = formKeywords
+        await api.post('/knowledge/bases', data)
+      }
+      setKbFormOpen(false)
+      loadBases()
+    } catch (err) {
+      setFormError(err instanceof api.ApiError ? err.message : '保存失败')
+    } finally {
+      setFormSaving(false)
+    }
+  }
+
+  const handleDeleteKb = async () => {
+    if (!deleteKb) return
+    setDeletingKb(true)
+    try {
+      const result = await api.delete<{ message: string; deleted_docs: number }>(`/knowledge/bases/${deleteKb.id}`)
+      setDeleteKb(null)
+      loadBases()
+      // 如果当前选中的就是被删除的知识库，重置筛选
+      if (selectedBase === deleteKb.name) {
+        setSelectedBase('')
+      }
+    } catch {
+      // ignore
+    } finally {
+      setDeletingKb(false)
     }
   }
 
@@ -231,13 +318,22 @@ export default function KnowledgePage() {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => setManageOpen(true)}
+            className="border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-all duration-200"
+          >
+            <Settings2 className="h-4 w-4 mr-1.5" />
+            管理知识库
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => { loadDocs(); loadBases() }}
             className="border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
           >
             <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
             刷新
           </Button>
-          <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) { setUploadFile(null); setUploadKb(''); setNewKbName(''); setUseNewKb(false); setUploadError('') } }}>
+          <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) { setUploadFile(null); setUploadKbId(''); setUploadError('') } }}>
             <DialogTrigger asChild>
               <Button
                 size="sm"
@@ -256,7 +352,7 @@ export default function KnowledgePage() {
               </DialogHeader>
               <div className="space-y-4 py-2">
                 {uploadError && (
-                  <div className="bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 text-sm p-3 rounded-lg flex items-center gap-2 animate-scale-in">
+                  <div className="bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 text-sm p-3 rounded-lg flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     {uploadError}
                   </div>
@@ -265,54 +361,22 @@ export default function KnowledgePage() {
                 {/* 知识库选择 */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">知识库</label>
-                  {useNewKb ? (
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="输入新知识库名称"
-                        value={newKbName}
-                        onChange={(e) => setNewKbName(e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => { setUseNewKb(false); setNewKbName('') }}
-                        className="shrink-0"
-                      >
-                        选择已有
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <Select value={uploadKb} onValueChange={setUploadKb}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="选择知识库" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {bases.length === 0 ? (
-                              <SelectItem value="default">默认知识库</SelectItem>
-                            ) : (
-                              bases.map((base) => (
-                                <SelectItem key={base.name} value={base.name}>
-                                  {base.name}（{base.doc_count} 篇）
-                                </SelectItem>
-                              ))
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => { setUseNewKb(true); setUploadKb('') }}
-                        className="shrink-0"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        新建
-                      </Button>
-                    </div>
-                  )}
+                  <Select value={uploadKbId} onValueChange={setUploadKbId}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="选择知识库" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bases.length === 0 ? (
+                        <SelectItem value="0" disabled>暂无知识库，请先创建</SelectItem>
+                      ) : (
+                        bases.map((base) => (
+                          <SelectItem key={base.id} value={String(base.id)}>
+                            {base.name}（{base.doc_count} 篇）
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Drop zone */}
@@ -350,7 +414,7 @@ export default function KnowledgePage() {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <div className="rounded-full bg-slate-50 w-14 h-14 flex items-center justify-center mx-auto group-hover:bg-slate-100 transition-colors">
+                      <div className="rounded-full bg-slate-50 w-14 h-14 flex items-center justify-center mx-auto">
                         <FileUp className="h-6 w-6 text-slate-400" />
                       </div>
                       <div>
@@ -362,7 +426,6 @@ export default function KnowledgePage() {
                       </div>
                     </div>
                   )}
-
                   <Input
                     ref={fileInputRef}
                     id="file-upload"
@@ -382,14 +445,14 @@ export default function KnowledgePage() {
               <DialogFooter className="gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => { setUploadOpen(false); setUploadFile(null); setUploadKb(''); setNewKbName(''); setUseNewKb(false); setUploadError('') }}
+                  onClick={() => { setUploadOpen(false); setUploadFile(null); setUploadKbId(''); setUploadError('') }}
                   className="border-slate-200"
                 >
                   取消
                 </Button>
                 <Button
                   onClick={handleUpload}
-                  disabled={!uploadFile || uploading || (useNewKb ? !newKbName.trim() : !uploadKb)}
+                  disabled={!uploadFile || !uploadKbId || uploading}
                   className="bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 transition-all duration-200"
                 >
                   {uploading ? (
@@ -428,7 +491,7 @@ export default function KnowledgePage() {
           </button>
           {bases.map((base) => (
             <button
-              key={base.name}
+              key={base.id}
               onClick={() => handleBaseChange(base.name)}
               className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
                 selectedBase === base.name
@@ -555,20 +618,8 @@ export default function KnowledgePage() {
                               </p>
                             </div>
                             <DialogFooter className="gap-2">
-                              <Button
-                                variant="outline"
-                                onClick={() => setDeleteConfirm(null)}
-                                className="border-slate-200"
-                              >
-                                取消
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                onClick={() => handleDelete(doc.id)}
-                                className="bg-red-600 hover:bg-red-700 transition-all duration-200"
-                              >
-                                确认删除
-                              </Button>
+                              <Button variant="outline" onClick={() => setDeleteConfirm(null)} className="border-slate-200">取消</Button>
+                              <Button variant="destructive" onClick={() => handleDelete(doc.id)} className="bg-red-600 hover:bg-red-700 transition-all duration-200">确认删除</Button>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
@@ -581,6 +632,205 @@ export default function KnowledgePage() {
           )}
         </div>
       </ScrollArea>
+
+      {/* ════════════════════════════════════════ */}
+      {/* 知识库管理 Dialog */}
+      {/* ════════════════════════════════════════ */}
+      <Dialog open={manageOpen} onOpenChange={setManageOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="font-heading text-slate-800">管理知识库</DialogTitle>
+                <DialogDescription>
+                  创建、编辑或删除知识库
+                </DialogDescription>
+              </div>
+              <Button
+                size="sm"
+                onClick={openCreateForm}
+                className="bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 text-white"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                新建知识库
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 -mx-6 px-6">
+            {bases.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+                <BookOpen className="h-12 w-12 mb-3 text-slate-200" />
+                <p className="text-sm">暂无知识库</p>
+                <p className="text-xs mt-1">点击上方按钮创建第一个知识库</p>
+              </div>
+            ) : (
+              <div className="space-y-3 py-2">
+                {bases.map((kb) => (
+                  <div
+                    key={kb.id}
+                    className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all duration-200"
+                  >
+                    <div className="rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-2.5 shrink-0">
+                      <FolderOpen className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-slate-800">{kb.name}</h4>
+                        <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                          {kb.doc_count} 篇文档
+                        </Badge>
+                      </div>
+                      {kb.description && (
+                        <p className="text-sm text-slate-500 mt-1 line-clamp-2">{kb.description}</p>
+                      )}
+                      {kb.keywords && (
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <Tag className="h-3 w-3 text-slate-400" />
+                          <span className="text-xs text-slate-400">{kb.keywords}</span>
+                        </div>
+                      )}
+                      <p className="text-xs text-slate-400 mt-1">创建于 {formatDate(kb.created_at)}</p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                        onClick={() => openEditForm(kb)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-slate-400 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => setDeleteKb(kb)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* ════════════════════════════════════════ */}
+      {/* 知识库创建/编辑 Dialog */}
+      {/* ════════════════════════════════════════ */}
+      <Dialog open={kbFormOpen} onOpenChange={setKbFormOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-slate-800">
+              {editingKb ? '编辑知识库' : '新建知识库'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingKb ? '修改知识库的名称、描述和关键词' : '创建一个新的知识库用于存放文档'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {formError && (
+              <div className="bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 text-sm p-3 rounded-lg flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {formError}
+              </div>
+            )}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                名称 <span className="text-red-500">*</span>
+              </label>
+              <Input
+                placeholder="知识库名称（将作为磁盘目录名）"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">描述</label>
+              <Textarea
+                placeholder="知识库的用途和内容简介（可选）"
+                value={formDesc}
+                onChange={(e) => setFormDesc(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">关键词</label>
+              <Input
+                placeholder="关键词，用逗号分隔（可选）"
+                value={formKeywords}
+                onChange={(e) => setFormKeywords(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setKbFormOpen(false)} className="border-slate-200">取消</Button>
+            <Button
+              onClick={handleKbFormSubmit}
+              disabled={!formName.trim() || formSaving}
+              className="bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 transition-all duration-200"
+            >
+              {formSaving ? '保存中...' : editingKb ? '保存修改' : '创建'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ════════════════════════════════════════ */}
+      {/* 知识库删除确认 Dialog */}
+      {/* ════════════════════════════════════════ */}
+      <Dialog open={deleteKb !== null} onOpenChange={(open) => { if (!open) setDeleteKb(null) }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-red-50 p-2">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+              </div>
+              <div>
+                <DialogTitle className="font-heading text-slate-800">确认删除知识库</DialogTitle>
+                <DialogDescription className="mt-1">
+                  此操作不可撤销
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="py-3 space-y-3">
+            <p className="text-sm text-slate-600">
+              确定要删除知识库「<span className="font-medium text-slate-800">{deleteKb?.name}</span>」吗？
+            </p>
+            {deleteKb && deleteKb.doc_count > 0 && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">该操作将同时删除以下内容：</p>
+                  <ul className="list-disc list-inside mt-1 text-amber-600">
+                    <li>{deleteKb.doc_count} 篇文档的 MySQL 记录</li>
+                    <li>对应的向量数据（Qdrant）</li>
+                    <li>磁盘上的源文件</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-slate-400">
+              删除后无法恢复，请谨慎操作。
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteKb(null)} className="border-slate-200">取消</Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteKb}
+              disabled={deletingKb}
+              className="bg-red-600 hover:bg-red-700 transition-all duration-200"
+            >
+              {deletingKb ? '删除中...' : '确认删除'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

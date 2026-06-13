@@ -155,6 +155,7 @@ async def upsert(chunks: list[Document], embeddings: list[list[float]]) -> int:
                 },
                 payload={
                     "source": chunk.metadata.get("source", ""),
+                    "kb_name": chunk.metadata.get("kb_name", ""),
                     "section": chunk.metadata.get("section", ""),
                     "subsection": chunk.metadata.get("subsection", ""),
                     "content": chunk.page_content,
@@ -272,4 +273,32 @@ async def delete(source: str) -> int:
     )
 
     logger.info("从 Qdrant 删除 source=%s 的向量", source)
+    return result.status  # type: ignore[return-value]
+
+
+async def delete_by_kb(kb_name: str) -> int:
+    """删除指定知识库的所有向量。
+
+    Args:
+        kb_name: 知识库名称
+
+    Returns:
+        删除的向量数量
+    """
+    client = _get_client()
+    collection_name = settings.qdrant_collection_name
+
+    result = await client.delete(
+        collection_name=collection_name,
+        points_selector=qdrant_models.Filter(
+            must=[
+                qdrant_models.FieldCondition(
+                    key="kb_name",
+                    match=qdrant_models.MatchValue(value=kb_name),
+                )
+            ]
+        ),
+    )
+
+    logger.info("从 Qdrant 删除 kb_name=%s 的向量", kb_name)
     return result.status  # type: ignore[return-value]

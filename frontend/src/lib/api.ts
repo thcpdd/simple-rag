@@ -167,6 +167,7 @@ function createSSEStream(
 export const api = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body?: unknown) => request<T>(path, { method: 'POST', body }),
+  put: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PUT', body }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
   upload: <T>(path: string, formData: FormData) =>
     request<T>(path, { method: 'POST', body: formData, isFormData: true }),
@@ -225,6 +226,7 @@ export interface ChatStopResponse {
 
 export interface KnowledgeDocResponse {
   id: number
+  kb_id: number | null
   knowledge_base: string
   file_path: string
   original_filename: string
@@ -249,6 +251,33 @@ export interface KnowledgeBaseItem {
 export interface KnowledgeBaseListResponse {
   total: number
   items: KnowledgeBaseItem[]
+}
+
+export interface KnowledgeBaseCreate {
+  name: string
+  description?: string
+  keywords?: string
+}
+
+export interface KnowledgeBaseUpdate {
+  name?: string
+  description?: string
+  keywords?: string
+}
+
+export interface KnowledgeBaseResponse {
+  id: number
+  name: string
+  description: string | null
+  keywords: string | null
+  doc_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface KnowledgeBaseDeleteResponse {
+  message: string
+  deleted_docs: number
 }
 
 export interface RegisterRequest {

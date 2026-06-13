@@ -9,6 +9,7 @@ SHANGHAI_TZ = timezone(timedelta(hours=8))
 
 class KnowledgeDocResponse(BaseModel):
     id: int
+    kb_id: int | None = None
     knowledge_base: str
     file_path: str
     original_filename: str
@@ -42,3 +43,40 @@ class KnowledgeBaseItem(BaseModel):
 class KnowledgeBaseListResponse(BaseModel):
     total: int
     items: list[KnowledgeBaseItem]
+
+
+# ─── KnowledgeBase CRUD Schemas ───
+
+class KnowledgeBaseCreate(BaseModel):
+    name: str
+    description: str | None = None
+    keywords: str | None = None
+
+
+class KnowledgeBaseUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    keywords: str | None = None
+
+
+class KnowledgeBaseResponse(BaseModel):
+    id: int
+    name: str
+    description: str | None = None
+    keywords: str | None = None
+    doc_count: int = 0
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+    @field_serializer("created_at", "updated_at")
+    def convert_to_shanghai(self, dt: datetime) -> datetime:
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(SHANGHAI_TZ)
+
+
+class KnowledgeBaseDeleteResponse(BaseModel):
+    message: str
+    deleted_docs: int

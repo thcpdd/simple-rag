@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -10,9 +10,13 @@ class KnowledgeDoc(Base):
     __tablename__ = "knowledge_docs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    kb_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("knowledge_bases.id", ondelete="CASCADE"), nullable=True, index=True,
+        comment="关联的知识库 ID"
+    )
     knowledge_base: Mapped[str] = mapped_column(
         String(100), nullable=False, default="",
-        comment="知识库名称（按 knowledges/ 下的子目录划分）"
+        comment="知识库名称（按 knowledges/ 下的子目录划分），冗余字段，优先使用 kb_id"
     )
     file_path: Mapped[str] = mapped_column(
         String(500), unique=True, nullable=False,

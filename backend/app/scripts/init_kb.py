@@ -20,6 +20,7 @@ from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.database import Base, async_session, engine
+from app.models.knowledge_base import KnowledgeBase
 from app.models.knowledge_doc import KnowledgeDoc
 from app.services.document_parser import parse_document
 from app.services.embedding import embed_batch
@@ -61,6 +62,25 @@ def _extract_knowledge_base(rel_path: str) -> str:
     """从相对路径中提取知识库名称（第一个子目录）。"""
     parts = rel_path.replace("\\", "/").split("/")
     return parts[0] if parts else "default"
+
+
+async def _ensure_knowledge_base(db, kb_name: str) -> KnowledgeBase:
+    """确保知识库记录存在，不存在则创建。
+
+    Returns:
+        KnowledgeBase 对象
+    """
+    result = await db.execute(
+        select(KnowledgeBase).where(KnowledgeBase.name == kb_name)
+    )
+    kb = result.scalar_one_or_none()
+    if kb is None:
+        kb = KnowledgeBase(name=kb_name)
+        db.add(kb)
+        await db.commit()
+        await db.refresh(kb)
+        logger.info("自动创建知识库: %s (id=%d)", kb.name, kb.id)
+    return kb
 
 
 async def main() -> None:
@@ -129,13 +149,19 @@ async def main() -> None:
             # 覆盖 metadata.source 为相对路径（替代原来的绝对路径）
             for chunk in chunks:
                 chunk.metadata["source"] = rel_path
+                chunk.metadata["kb_name"] = kb_name
 
             total_chunks.extend(chunks)
             total_new_files += 1
 
+            # 先确保 KB 记录存在
+            async with async_session() as db:
+                kb = await _ensure_knowledge_base(db, kb_name)
+
             # 准备 MySQL 记录（先缓存，写入 Qdrant 后再持久化）
             file_records.append(
                 KnowledgeDoc(
+                    kb_id=kb.id,
                     knowledge_base=kb_name,
                     file_path=rel_path,
                     original_filename=file_path.name,
