@@ -1,0 +1,988 @@
+[
+  {
+    "index": 1,
+    "question": "Auperator 是什么系统？它的全称和核心目标是什么？",
+    "ground_truth": "Auperator（Automation Operator）是一个基于 DeepAgents 架构的智能运维系统。它的核心目标是解决传统运维系统的痛点——被动响应、依赖人工分析、修复周期长，通过引入 AI Agent 技术实现从问题发现到修复的全自动化闭环。系统支持 CLI 命令行模式和 Web UI 聊天界面双模式。",
+    "ideal_contexts": [
+      "Auperator 是一个基于 DeepAgents 架构的智能运维系统，能够自动监控 Web 应用、收集日志、智能分析并修复问题，最终通过提交 PR 完成闭环修复。",
+      "Auperator 致力于解决传统运维系统中的痛点：被动响应、依赖人工分析、修复周期长。通过引入 AI Agent 技术，实现从问题发现到修复的全自动化闭环。",
+      "双界面模式：CLI 模式——命令行界面，用于日志消费和自动修复；Web UI 模式——基于 Next.js 的聊天界面，支持实时对话和事件流。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/core.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 系统核心模块介绍  \n*核心模块是整个系统最为重要的部分，它保证了整个智能抢课系统的稳定运行。*  \n---  \n在前面的章节中我粗略的介绍了这个系统的前端和后端部分。但是由于它们都是这个系统的次要部分，因此我没有详细地对它们的设计逐步展开介绍。  \n但是，接下来的核心模块部分，是这个系统中最最重要的部分。所以我将以模块的形式来一一介绍它们。  \n现在，我将核心系统分为以下几个部分：  \n1. **课程选择器模块**\n2. **数据存储模块之数据库模块**\n3. **数据存储之缓存模块**\n4. **会话管理模块**\n5. **任务调度模块**\n6. **邮件发送模块**\n7. **配置模块**\n8. **其他模块**  \n可以用下图来表示它们之间的关系：  \n![](images/sys.png)  \n下面，让我来一一介绍它们……",
+        "score": 0.5
+      },
+      {
+        "source": "auperator/README.md",
+        "section": "",
+        "subsection": "",
+        "content": "# Auperator  \n> **Automation Operator** - 智能运维 Agent  \nAuperator 是一个基于 DeepAgents 架构的智能运维系统，能够自动监控 Web 应用、收集日志、智能分析并修复问题，最终通过提交 PR 完成闭环修复。",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/introduce.md",
+        "section": "它有什么特点？",
+        "subsection": "",
+        "content": "2. **支持提前提交选课任务**  \n即使还没到选课时间，你也可以在系统上提交选课任务，因为系统内部会自动判断当前时间是否是选课时间。  \n3. **支持查询选课进度**  \n当你在系统上提交了你的选课申请，那么当选课开始时，系统内部会记录每一步选课动作，你可以通过系统提供的接口来查询你的选课进度。  \n4. **后台可监听所有选课任务进度**  \n这个功能对于网站管理员来说是尤为重要的，系统管理员可以以一个上帝视角去实时查看所有的选课进度。  \n5. **显示课程的已选择人数**  \n如果你急切地想看到意向课程的选课情况，并且又进不去教务系统。那么不用担心，系统内部会每隔一段时间从教务系统中获取课程的已选择人数，并展示到系统的相关页面。  \n6. **不使用账号密码也能选课**  \n如果你不想泄露你的密码，那么抢课系统也提供了一个不用密码的抢课渠道。",
+        "score": 0.3333
+      },
+      {
+        "source": "auperator/README.md",
+        "section": "概述",
+        "subsection": "",
+        "content": "Auperator 致力于解决传统运维系统中的痛点：被动响应、依赖人工分析、修复周期长。通过引入 AI Agent 技术，实现从问题发现到修复的全自动化闭环。  \n**双界面模式**：  \n- **CLI 模式**：命令行界面，用于日志消费和自动修复\n- **Web UI 模式**：基于 Next.js 的聊天界面，支持实时对话和事件流",
+        "score": 0.3333
+      },
+      {
+        "source": "auperator/docs/README.md",
+        "section": "",
+        "subsection": "",
+        "content": "# Auperator 文档  \n智能运维 Agent 系统文档中心。",
+        "score": 0.25
+      }
+    ],
+    "agent_answer": "## Auperator 系统介绍\n\n**Auperator** 的全称是 **Automation Operator**（即\"智能运维 Agent\"）。\n\n### 核心目标\n\nAuperator 是一个基于 **DeepAgents 架构**的智能运维系统，其核心目标是：\n\n1. **自动监控** Web 应用\n2. **收集日志**\n3. **智能分析** 并 **修复问题**\n4. **最终通过提交 PR 完成闭环修复**\n\n简单来说，Auperator 旨在实现自动化运维的全流程闭环——从发现问题到分析问题，再到解决问题，整个过程无需人工干预，自动以提交代码修复（PR）的方式完成。\n\n> 参考文档：*auperator/README.md*"
+  },
+  {
+    "index": 2,
+    "question": "DeepAgents 架构中包含哪些子 Agent？它们各自的职责是什么？",
+    "ground_truth": "DeepAgents 架构包含 4 个子 Agent：(1) log_analysis（日志分析 Agent）——分析错误日志、查询 Qdrant 历史记忆、分类错误类型、评估严重程度、生成分析报告；(2) fix（代码修复 Agent）——定位问题代码、生成修复方案、安全修改代码、文档化变更；(3) validation（验证测试 Agent）——运行测试套件、检查代码质量、回归测试、修复效果评估；(4) pr（PR 管理 Agent）——生成 PR 描述、创建分支、提交代码、发起 Pull Request。它们由 Main Agent（编排器）统一协调，Main Agent 负责理解用户意图、任务分解分发、结果汇总呈现和实时事件推送。",
+    "ideal_contexts": [
+      "DeepAgents 是 Auperator 的核心智能引擎，采用多 Agent 协作架构。",
+      "Main Agent（编排器）：理解用户意图，任务分解和分发，结果汇总和呈现，实时事件推送。",
+      "log_analysis（日志分析）：分析错误日志，定位问题，查询历史记忆（Qdrant），分类错误类型，评估严重程度，生成分析报告。",
+      "fix（代码修复）：实施代码修复，定位问题代码，生成修复方案，安全修改代码，文档化变更。",
+      "validation（验证测试）：验证修复有效性，运行测试套件，检查代码质量，回归测试，修复效果评估。",
+      "pr（PR 管理）：创建 Pull Request，生成 PR 描述，创建分支，提交代码，发起 PR。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/backend.md",
+        "section": "为什么选择它作为后端框架？",
+        "subsection": "",
+        "content": "在 Python 中，有许多优秀的后端框架，它们包括但不限于以下：  \n- **Django**：  \n一个适合构建全栈项目的 Python 后端重量级框架。整个框架都围绕“开箱即用”而展开，里面包含了丰富的后端开发工具。它可以说是在 Python 中最流行、社区最大的后端框架。  \n但是正是由于它包含了太多这个项目不需要的工具，然而我的这个项目本身也不算太大，如果此时引入这个框架只会增加项目的复杂度，这使得整个项目也会成为“重量级”项目。  \n因此我排除了它。  \n- **Flask**：  \n一个轻量级的 Python 后端框架。  \n但是这个框架对于异步的支持度不大高，而抢课系统本身是基于异步模型展开的，所以我也将它给排除了。  \n- **Tornado**：  \n一个专注于异步协议的轻量级 Python 后端框架。",
+        "score": 0.5
+      },
+      {
+        "source": "auperator/docs/backend/architecture.md",
+        "section": "核心组件",
+        "subsection": "4. Agent 引擎",
+        "content": "参见 [DeepAgents 架构](deepagents.md)",
+        "score": 0.5
+      },
+      {
+        "source": "auperator/docs/backend/deepagents.md",
+        "section": "",
+        "subsection": "",
+        "content": "# DeepAgents 架构  \nDeepAgents 是 Auperator 的核心智能引擎，采用多 Agent 协作架构。",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/configuration.md",
+        "section": "模块介绍",
+        "subsection": "",
+        "content": ">\n> 这些类在创建时的资源开销是非常大的，因此我不希望开销这么多的资源去创建它。\n>\n> 用一个词来概括上面的话：单例。  \n那么配置类是不是也应该使用一个单例呢？  \n你可以设想，这个配置类里的属性会自它被创建开始都会保持不变，因此创建多个配置类是没有意义的。  \n那我们应该如何实现单例模式呢？  \n我们可以将这个类的对象保存到类属性中，如果这个类属性为空，那么就创建对象；否则直接返回这个对象。  \n> [!tip|label:为什么将对象保存到类属性中就能保证单例了呢？]\n>\n> 这里涉及到了 Python 中类的加载时机。说的简单点就是：当一个类被引入时，它的所有类属性以及定义在类板块中的逻辑都会被加载和执行，**并且相关的类属性都只会被加载一次**。\n>\n> 这是一个简单的例子：\n>\n> ```python\n> class A:\n>     print('loading')",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/backend.md",
+        "section": "为什么选择它作为后端框架？",
+        "subsection": "",
+        "content": "- **Tornado**：  \n一个专注于异步协议的轻量级 Python 后端框架。  \n按理说它就是这个项目最合适的后端框架了，但是我为什么没有选择它呢？  \n这个原因可能有些荒唐但又显得不这么荒唐：因为我在写这个项目的时候还没有学过这个框架😂。  \n在此之前我刚好学会了 FastAPI 这个框架，但还没有一个具体项目的实践，因此就阴差阳错的选择了 FastAPI 作为本项目的后端框架。  \n当然，FastAPI 相较于 Tornado 来说还是有许多优点的：  \n1. **高性能**。  \n虽然该优点没有在这个项目中发挥出来，但是凭借这一点却使他在所有的 Python 后端框架中脱颖而出。  \n2. **丰富的社区资源**。  \n在 GitHub 中，它的关注量仅次于 Django 框架。这表明它有着丰富的社区资源，遇到问题也可以快速定位并解决。",
+        "score": 0.25
+      }
+    ],
+    "agent_answer": "根据检索到的 **DeepAgents 架构文档**，以下是该架构中包含的子 Agent 及其职责：\n\n---\n\n## DeepAgents 子 Agent 一览\n\nDeepAgents 采用 **多 Agent 协作架构**，由一个 **主 Agent（Orchestrator）** 协调调度多个子 Agent 协同工作：\n\n### 🧠 主 Agent（Main Agent / Orchestrator）\n- **职责**：作为总协调器（Orchestrator），负责任务分发、编排和调度，将具体任务分配给对应的子 Agent 并协调工作流。\n- **工具**：调度各子 Agent 的能力\n\n### 📋 四大核心子 Agent\n\n| 子 Agent | 职责 | 能力 |\n|---------|------|------|\n| **log_analysis**（日志分析 Agent） | 负责日志分析与问题根因定位 | • 基于日志模板分析错误根因<br>• 查询历史记忆（Qdrant）<br>• 生成分析报告传递给 fix Agent |\n| **fix**（代码修复 Agent） | 负责实施代码修复 | • 在沙箱（Daytona Sandbox）中定位问题<br>• 实施代码修复<br>• 运行测试验证修复<br>• 使用 Shell 执行工具 |\n| **validation**（验证测试 Agent） | 负责验证修复的有效性 | • 运行测试套件<br>• 检查代码质量<br>• 回归测试<br>• 修复效果评估 |\n| **pr**（PR 管理 Agent） | 负责 Pull Request 管理 | • 自动创建分支<br>• 提交代码<br>• 发起 Pull Request 到 GitHub |\n\n### 🔧 其他 Agent\n\n| Agent | 职责 |\n|------|------|\n| **initialize**（项目初始化 Agent） | 负责项目初始化相关的提示词与引导 |\n\n---\n\n### 🔄 工作流程示意\n\n```\nMain Agent（协调器）\n    ├── log_analysis（日志分析 → 生成分析报告）\n    ├── fix（代码修复 → 在沙箱中执行修复）\n    ├── validation（验证测试 → 检查修复效果）\n    └── pr（PR管理 → 提交PR到GitHub）\n```\n\n各 Agent 之间还会互相协作，例如：\n- **log_analysis** 将分析报告传递给 **fix**\n- **fix** 将修复方案传递给 **validation** 进行测试验证\n- **validation** 将测试结果返回给 **fix**（失败则循环修复），通过后交给 **pr** 合并\n\n> 📄 **文档来源**：`auperator/docs/backend/deepagents.md` — 架构概览、Agent 详解、提示词系统等章节"
+  },
+  {
+    "index": 3,
+    "question": "Drain3 服务的工作原理是什么？有哪些关键配置参数？",
+    "ground_truth": "Drain3 是一个在线日志模板挖掘算法，它能从日志消息中提取固定模板并识别变量部分。例如，多条不同 IP 和端口的连接拒绝日志会被提取为模板 'ERROR: Connection refused to <IP>:<PORT>'。关键配置参数包括：DRAIN3_DEPTH=4（解析树深度）、DRAIN3_MAX_CLUSTERS=1000（最大聚类数）、DRAIN3_MAX_CHILDREN=100（每个节点最大子节点数）、DRAIN3_SIM_TH=0.4（相似度阈值）、DRAIN3_STATE_FILE=drain3.json（状态文件路径，用于持久化学习的模板，重启不丢失）。",
+    "ideal_contexts": [
+      "Drain3 是一个在线日志模板挖掘算法，用于从日志消息中提取固定模板并识别变量部分。",
+      "原始日志：ERROR: Connection refused to 192.168.1.100:5432 → 提取后的模板：ERROR: Connection refused to <IP>:<PORT>",
+      "DRAIN3_DEPTH = 4（解析树深度），DRAIN3_MAX_CLUSTERS = 1000（最大聚类数），DRAIN3_MAX_CHILDREN = 100（每个节点最大子节点数），DRAIN3_SIM_TH = 0.4（相似度阈值），DRAIN3_STATE_FILE = drain3.json（状态文件路径）",
+      "Drain3 会将学习到的模板保存到 drain3.json，实现状态持久化。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/configuration.md",
+        "section": "模块介绍",
+        "subsection": "",
+        "content": "这个配置主要是在数据库中要到，不是选课参数。  \n8. `START_TIME`  \n开始选课时间。  \n按照时机的开始选课时间填写即可。  \n9. `EMAIL_CONFIG`  \nSMTP 邮件发送配置。  \n这个配置的默认值是我的，因此你需要将这些配置更改为你自己的邮件发送配置。这个配置需要到对应的邮件服务中开通。  \n10. `USE_TENCENT_CLOUD_MAIL_SERVICE`  \n是否使用腾讯云服务来发送选课成功邮件。  \n11. `PORTS`  \n模拟登录时使用到的所有主机号。  \n12. `SYSTEM_OPENING_TIME`  \n系统开放时间。  \n这个主要是限制后端提交预约抢课的时间，如果没到达这个时间，那么后端将不会发送选课任务。  \n13. `ARQ_REDIS_SETTINGS`  \n消息队列的 `Redis` 配置。",
+        "score": 0.5
+      },
+      {
+        "source": "auperator/docs/backend/services/drain3.md",
+        "section": "",
+        "subsection": "",
+        "content": "# Drain3 服务",
+        "score": 0.5
+      },
+      {
+        "source": "auperator/docs/backend/services/drain3.md",
+        "section": "概述",
+        "subsection": "",
+        "content": "Drain3 是一个在线日志模板挖掘算法，用于从日志消息中提取固定模板并识别变量部分。",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/schedule.md",
+        "section": "如何实现并发？",
+        "subsection": "",
+        "content": "由于选课是 IO 密集型任务，因此使用多线程来实现并发是最为合适的。但是，一旦当选课任务多起来，比如有 100 多个选课任务，那么我是不是应该也创建 100 多个线程呢？  \n其实线程不是越多越好，创建过多的线程还会导致任务执行效率低下。因为多个线程之间需要不断地切换上下文，而切换上下文的过程是较为耗时的，所以多线程的创建也是一个难题。  \n3. **协程**  \n协程是一种轻量级线程。下面是协程和线程间的区别：  \n- **线程处在操作系统中的内核态，而协程则处在用户态。**\n- **线程必须由操作系统调度，而协程完全由用户调度。**\n- **线程上下文间的切换较慢，而协程上下文间的切换较快。**  \n也就是说，协程是比线程更小的执行单位，而且一个协程就能实现并发，这是协程非常重要的特性。  \n有关协程的工作原理可以自行在网上查阅相关资料，这里就详细展开说明了……",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/configuration.md",
+        "section": "模块介绍",
+        "subsection": "",
+        "content": "配置当前环境是否是开发环境。默认为 `True`。  \n这个选项貌似只在数据库连接那里有效。如果这个值为真，那么在连接数据库时就会读取根目录下的 `mongodb_dev` 文件；否则会读取 `mongodb` 文件。  \n这个配置是在本地开发的时候为了不将数据库配置泄露出去而新增的配置。  \n**在你使用这个项目的时候应该将它的值改为 `False`。**  \n2. `DATABASES`  \n数据库连接配置项。  \n当前的配置主要是 `Redis` 和 `MongoDB`。其中后者的配置会动态读取，当然你也可以直接在这个配置中编写连接配置。  \n3. `TIMEOUT`  \n全局选课超时时间，默认为 2 个小时。  \n课程选择器发送的每一个请求都是带上这个超时时间。  \n4. `SETTING_SESSION_TIMEOUT`  \n登录超时时间，默认为 1 个小时。",
+        "score": 0.25
+      }
+    ],
+    "agent_answer": "## Drain3 服务的工作原理\n\nDrain3 是一个**在线日志模板挖掘算法**，用于从日志消息中提取固定模板并识别变量部分。根据知识库文档，其核心工作方式主要包括以下几个要点：\n\n### 核心工作机制\n\n| 特性 | 说明 |\n|------|------|\n| **基于解析树的日志解析** | 采用深度固定的解析树（Parse Tree）结构，逐层对日志进行分组和匹配 |\n| **在线学习** | 持续学习新的日志模板，无需离线训练 |\n| **模板提取** | 自动识别日志中的**固定文本部分**和**变量部分**（如 IP 地址、端口号等） |\n| **智能去重** | 相同模板的日志只处理一次，避免重复处理 |\n| **状态持久化** | 学习的模板保存到 `drain3.json`，重启服务不丢失 |\n\n**来源：** `auperator/docs/backend/services/drain3.md` - 概述；`auperator/README.md` - 核心功能 / 智能去重\n\n---\n\n## 关键配置参数\n\n根据 `auperator/README.md`（快速开始 / 配置）和 `auperator/docs/backend/services/drain3.md`（配置章节），Drain3 共有 **5 个关键配置参数**：\n\n| 参数名称 | 默认值 | 说明 |\n|----------|-------|------|\n| `DRAIN3_DEPTH` | `4` | **解析树深度**。控制日志解析时树的最大层数，深度越大解析粒度越细 |\n| `DRAIN3_MAX_CLUSTERS` | `1000` | **最大聚类数**。限制最多能学习到的日志模板数量，防止无限增长 |\n| `DRAIN3_MAX_CHILDREN` | `100` | **每个节点最大子节点数**。限制解析树中每个内部节点的子节点上限 |\n| `DRAIN3_SIM_TH` | `0.4` | **相似度阈值**。判定日志是否匹配已有模板的相似度门槛，值越高匹配越严格 |\n| `DRAIN3_STATE_FILE` | `drain3.json` | **状态文件路径**。指定模板持久化文件的存储路径 |\n\n### 配置示例（`.env` 文件）\n\n```bash\nDRAIN3_STATE_FILE=drain3.json\nDRAIN3_DEPTH=4\nDRAIN3_MAX_CLUSTERS=1000\nDRAIN3_MAX_CHILDREN=100\nDRAIN3_SIM_TH=0.4\n```\n\n---\n\n### 状态持久化示例\n\nDrain3 学习到的模板会以 JSON 格式持久化到 `drain3.json` 文件中：\n\n```json\n{\n  \"clusters\": [\n    {\n      \"cluster_id\": 1,\n      \"template\": \"ERROR: Connection refused to <IP>:<PORT>\",\n      \"size\": 42\n    },\n    {\n      \"cluster_id\": 2,\n      \"template\": \"Connection timeout for <*>\",\n      \"size\": 15\n    }\n  ]\n}\n```\n\n**来源：** `auperator/docs/backend/services/drain3.md` - 状态持久化\n\n---\n\n> 💡 **提示**：如果您想了解 Drain3 算法更底层的解析树构建原理（如如何按 Token 长度、前缀匹配等逐层分组），目前知识库中未包含更详细的原理说明。如需深入了解，建议查阅 Drain3 开源项目的官方文档。"
+  },
+  {
+    "index": 4,
+    "question": "Auperator 的事件系统包含哪些事件类型？底层使用什么技术实现？",
+    "ground_truth": "事件系统包含 4 种事件类型：USER（用户消息事件）、AGENT（Agent 响应事件）、ERROR（错误事件）、STATUS（状态更新事件）。底层基于 Redis Streams 实现事件驱动架构。核心组件是 EventCenter，负责事件发布、事件消费和消费者组管理。Redis Stream key 为 'auperator:events:all'，包含 3 个消费者组：web-ui（SSE 推送）、agent-worker（Agent 任务处理）、telegram（Telegram 通知）。",
+    "ideal_contexts": [
+      "事件系统是 Auperator 的核心通信机制，基于 Redis Streams 实现事件驱动的架构。",
+      "事件类型：USER（用户消息事件）、AGENT（Agent 响应事件）、ERROR（错误事件）、STATUS（状态更新事件）。",
+      "EventCenter 负责事件发布（publish）、事件消费（consume）、消费者组管理。",
+      "Stream Key: auperator:events:all。消费者组：web-ui（Web UI SSE 推送）、agent-worker（Agent 任务处理）、telegram（Telegram 通知）。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/mail.md",
+        "section": "",
+        "subsection": "",
+        "content": "- **HTMLEmailSender**  \n是 `SMTP` 邮件发送器的子类，专门发送 `HTML` 类型的邮件。  \n- **TextEmailSender**  \n是 `SMTP` 邮件发送器的子类，专门发送 `Text` 类型的邮件。  \n- **TencentCloudEmailSender**  \n直接继承于抽象邮件发送器，它表示所有的邮件发送都是由腾讯云来发送。  \n我选择使用腾讯云服务来发送邮件的原因是：如果直接使用 `SMTP` 来发送邮件，那么这会存在一个限流问题，这导致之前在测试的时候，很多邮件都发送失败了。  \n尽管使用腾讯云服务来发送邮件也会有一个限流，但是这相对于使用 `SMTP` 来发送邮件已经很好了。  \n> [!tip|label:这些邮件发送器都在什么时候使用呢？]\n>\n> - 如果是选课失败的邮件，那么都会使用文本类型的邮件发送器发送邮件。",
+        "score": 0.5
+      },
+      {
+        "source": "auperator/docs/backend/events.md",
+        "section": "概述",
+        "subsection": "",
+        "content": "事件系统是 Auperator 的核心通信机制，基于 Redis Streams 实现事件驱动的架构。",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/mail.md",
+        "section": "",
+        "subsection": "",
+        "content": ">\n> - 如果是选课失败的邮件，那么都会使用文本类型的邮件发送器发送邮件。\n> - 如果是选课成功的邮件，并且在配置文件中指定了使用腾讯云来发送邮件，那么就会使用腾讯云邮件发送器；否则使用超文本标记语言邮件发送器。  \n针对这么多情况的选择，这里使用了设计模式中的`工厂方法模式`来获取符合条件的邮件发送器。  \n它位于该模块下的 `EmailSenderFactory` 类。  \n为了让其他模块更方便地使用邮件发送功能，这里统一定义了一个函数：`send_email`。  \n这个函数可以根据传入的参数来自动判断应该调用的邮件发送器来发送邮件。  \n因此你不需要自己调用那些邮件发送器，你只需要调用这个函数就可以很方便地发送邮件了。",
+        "score": 0.3333
+      },
+      {
+        "source": "auperator/README.md",
+        "section": "概述",
+        "subsection": "",
+        "content": "Auperator 致力于解决传统运维系统中的痛点：被动响应、依赖人工分析、修复周期长。通过引入 AI Agent 技术，实现从问题发现到修复的全自动化闭环。  \n**双界面模式**：  \n- **CLI 模式**：命令行界面，用于日志消费和自动修复\n- **Web UI 模式**：基于 Next.js 的聊天界面，支持实时对话和事件流",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/backend.md",
+        "section": "为什么选择它作为后端框架？",
+        "subsection": "",
+        "content": "3. **标准的 Python 类型提示**。  \n这点在任何一个项目中都是非常重要的，即使 Python 是一门强类型语言，但是你在声明一个变量的时候不需要明确指定变量的类型。  \n这会导致什么问题呢？首先我们来看下面这个简单的例子：  \n```python\ndef add(a, b):\nreturn a + b\n```  \n它定义了一个非常简单的函数，一般程序员都会以为这个函数实现了两个整数相加并返回结果。  \n但是，在 Python 中，支持加号运算符的数据类型可不只有整型，它还包括：列表、字符串等等。  \n所以这里就会对这个函数产生一个疑惑：这个函数的参数我到底该传入什么样的类型呢？函数的返回值又应该是个什么类型呢？  \n> [!tip]\n>\n> 当然，你也可以编写函数说明文档来表明这个函数的意图。但我们现在有更简单的办法来解决这个问题。",
+        "score": 0.25
+      }
+    ],
+    "agent_answer": "## Auperator 事件系统\n\n### 事件类型\n\nAuperator 的事件系统定义了 **4 种核心事件类型**（基于 `EventType` 枚举）：\n\n| 事件类型 | 说明 |\n|---------|------|\n| **USER** | 用户消息 |\n| **AGENT** | Agent 响应 |\n| **ERROR** | 错误事件 |\n| **STATUS** | 状态更新 |\n\n（来源：[architecture.md - 事件中枢](/auperator/docs/backend/architecture.md)）\n\n---\n\n### 底层技术实现\n\n底层基于 **Redis Streams** 实现事件驱动架构，具体包含：\n\n1. **消息存储**：\n   - 使用 **Redis Stream** 数据结构，Key 为 `auperator:events:all`\n   - （来源：[events.md - Redis 数据结构](/auperator/docs/backend/events.md)）\n\n2. **消费者组（Consumer Groups）**：\n   - **`web-ui`** — 用于 Web UI 的 **SSE（Server-Sent Events）** 实时推送，将事件流推送到前端\n   - **`agent-worker`** — 用于 Agent 任务的异步后台处理\n   - （来源：[architecture.md - 事件中枢](/auperator/docs/backend/architecture.md)）\n\n3. **核心特性**：\n   - 支持多消费者并行处理\n   - 异步处理机制\n   - 实时事件推送\n   - （来源：[README.md - 核心功能](/auperator/README.md)）\n\n---\n\n**总结**：Auperator 的事件系统以 **Redis Streams** 作为消息中间件，提供了 USER、AGENT、ERROR、STATUS 四种事件类型，通过消费者组机制分别服务于 Web UI 的实时 SSE 推送和 Agent 的后台异步任务处理。"
+  },
+  {
+    "index": 5,
+    "question": "Auperator 有哪些部署方式？Docker Compose 启动后包含哪些服务？",
+    "ground_truth": "Auperator 支持三种部署方式：完整启动（后端 + 前端 + Vector）、仅启动 Web UI、Docker 部署。Docker Compose 一键启动后包含以下服务：redis（Redis 7 Alpine，端口 6379）、qdrant（Qdrant 向量数据库，端口 6333）、api（Auperator API，端口 7000）、web（Next.js Web UI，端口 3000），以及可选的 vector（日志采集）。使用 'docker-compose --profile vector up -d' 可包含 Vector 服务。",
+    "ideal_contexts": [
+      "完整启动（后端 + 前端 + Vector）：auperator server + vector --config vector.yaml + npm run dev + auperator start",
+      "仅启动 Web UI：auperator server + cd src/web && npm run dev",
+      "Docker Compose 服务：redis（6379，Redis 7 Alpine）、qdrant（6333，Qdrant 向量数据库）、api（7000，Auperator API）、web（3000，Next.js Web UI）、vector（日志采集，可选）",
+      "包含 Vector 日志采集：docker-compose --profile vector up -d"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "auperator/README.md",
+        "section": "快速开始",
+        "subsection": "启动服务",
+        "content": "# 终端 2: 启动 Web UI\ncd src/web && npm run dev\n```  \n访问 <http://localhost:3000> 使用 Web UI  \n#### Docker 部署  \n使用 Docker Compose 一键启动所有服务：  \n```bash\ncd deploy\n\n# 启动所有服务（Redis + Qdrant + API + Web UI）\ndocker-compose up -d\n\n# 包含 Vector 日志采集\ndocker-compose --profile vector up -d\n\n# 查看服务状态\ndocker-compose ps\n\n# 查看日志\ndocker-compose logs -f api\ndocker-compose logs -f web",
+        "score": 0.5
+      },
+      {
+        "source": "auperator/deploy/README.md",
+        "section": "",
+        "subsection": "",
+        "content": "# Auperator 部署文档",
+        "score": 0.5
+      },
+      {
+        "source": "auperator/deploy/README.md",
+        "section": "服务管理",
+        "subsection": "启动",
+        "content": "```bash\n# 启动所有服务\ndocker compose up -d\n\n# 启动核心服务（不含 Vector）\ndocker compose up -d redis qdrant api web\n\n# 启动包含 Vector\ndocker compose --profile vector up -d\n\n# 仅启动特定服务\ndocker compose up -d redis\n```",
+        "score": 0.3333
+      },
+      {
+        "source": "auperator/README.md",
+        "section": "快速开始",
+        "subsection": "启动服务",
+        "content": "#### 完整启动（后端 + 前端 + Vector）  \n```bash\n# 终端 1: 启动 Auperator API 服务\nauperator server\n\n# 终端 2: 启动 Vector（用于日志采集）\nvector --config vector.yaml\n\n# 终端 3: 启动 Web UI\ncd src/web\nnpm run dev\n# 或\npnpm dev\n\n# 终端 4: 启动自动修复模式（可选）\nauperator start\n```  \n#### 仅启动 Web UI  \n```bash\n# 终端 1: 启动 API 服务\nauperator server",
+        "score": 0.25
+      },
+      {
+        "source": "auperator/README.md",
+        "section": "调试和监控",
+        "subsection": "Docker 调试",
+        "content": "```bash\n# 查看所有容器状态\ndocker ps\n\n# 查看 API 服务日志\ndocker logs -f auperator-api\n\n# 查看 Web UI 日志\ndocker logs -f auperator-web\n\n# 进入 API 容器\ndocker exec -it auperator-api /bin/bash\n\n# 查看 Vector 日志\ndocker logs -f auperator-vector\n\n# 重启指定服务\ndocker-compose restart api\ndocker-compose restart web\n```",
+        "score": 0.2
+      }
+    ],
+    "agent_answer": "## Auperator 的部署方式\n\n根据知识库文档，Auperator 主要有以下部署方式：\n\n### 1️⃣ CLI 命令行部署\n直接通过命令行启动各项服务：\n```bash\nauperator server          # 启动 API 服务\nauperator start           # 启动自动修复模式\nauperator terminal-consume -v  # 终端消费模式（调试）\n```\n*参考：`auperator/README.md > CLI 命令`*\n\n### 2️⃣ 源码方式部署\n需要分别启动后端 API 和前端 Web UI 服务。\n\n### 3️⃣ Docker Compose 部署（推荐）\n一键启动所有服务，位于 `deploy/` 目录下：\n```bash\ncd deploy\ndocker-compose up -d                        # 启动所有核心服务\ndocker-compose --profile vector up -d       # 包含 Vector 日志采集（可选）\n```\n*参考：`auperator/README.md > 快速开始 > 启动服务`*\n\n---\n\n## Docker Compose 包含的服务\n\n| 服务名   | 端口  | 描述                     |\n| -------- | ----- | ------------------------ |\n| **redis**  | 6379  | Redis 7 Alpine（消息队列） |\n| **qdrant** | 6333  | Qdrant 向量数据库         |\n| **api**    | 7000  | Auperator API 服务       |\n| **web**    | 3000  | Next.js Web UI 前端界面  |\n| **vector** | -     | 日志采集服务（可选，需启用 `--profile vector`） |\n\n*参考：`auperator/README.md > Docker Compose 服务`表格*\n\n总结来说，**核心服务为 4 个（redis + qdrant + api + web）**，Vector 日志采集为可选扩展服务，可通过 `--profile vector` 参数额外启用。"
+  },
+  {
+    "index": 6,
+    "question": "Auperator 的记忆服务如何使用？它有哪些分区？",
+    "ground_truth": "记忆服务基于 Qdrant 向量数据库，提供语义搜索能力，让 Agent 能够记住历史问题和解决方案。主要操作包括：save() 保存记忆、search() 按语义相似度搜索、search_weighted() 多分区加权检索。记忆条目分为 3 个分区：problems（问题描述，如'数据库连接超时问题'）、solutions（解决方案，如'增加连接池大小'）、context（上下文信息，如'项目使用 Django 3.2'）。嵌入模型使用 text-embedding-3-small，向量维度 1536，距离算法为 Cosine。",
+    "ideal_contexts": [
+      "记忆服务基于 Qdrant 向量数据库，提供语义搜索能力，让 Agent 能够记住历史问题和解决方案。",
+      "分区：problems（问题描述，例如'数据库连接超时问题'）、solutions（解决方案，例如'增加连接池大小'）、context（上下文信息，例如'项目使用 Django 3.2'）",
+      "主要 API：save() 保存记忆、search() 按语义相似度搜索、search_weighted() 多分区加权检索。",
+      "Qdrant 配置：QDRANT_COLLECTION=auperator_memories，向量 size=1536，distance=Cosine。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/mail.md",
+        "section": "",
+        "subsection": "",
+        "content": "- **HTMLEmailSender**  \n是 `SMTP` 邮件发送器的子类，专门发送 `HTML` 类型的邮件。  \n- **TextEmailSender**  \n是 `SMTP` 邮件发送器的子类，专门发送 `Text` 类型的邮件。  \n- **TencentCloudEmailSender**  \n直接继承于抽象邮件发送器，它表示所有的邮件发送都是由腾讯云来发送。  \n我选择使用腾讯云服务来发送邮件的原因是：如果直接使用 `SMTP` 来发送邮件，那么这会存在一个限流问题，这导致之前在测试的时候，很多邮件都发送失败了。  \n尽管使用腾讯云服务来发送邮件也会有一个限流，但是这相对于使用 `SMTP` 来发送邮件已经很好了。  \n> [!tip|label:这些邮件发送器都在什么时候使用呢？]\n>\n> - 如果是选课失败的邮件，那么都会使用文本类型的邮件发送器发送邮件。",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/core.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 系统核心模块介绍  \n*核心模块是整个系统最为重要的部分，它保证了整个智能抢课系统的稳定运行。*  \n---  \n在前面的章节中我粗略的介绍了这个系统的前端和后端部分。但是由于它们都是这个系统的次要部分，因此我没有详细地对它们的设计逐步展开介绍。  \n但是，接下来的核心模块部分，是这个系统中最最重要的部分。所以我将以模块的形式来一一介绍它们。  \n现在，我将核心系统分为以下几个部分：  \n1. **课程选择器模块**\n2. **数据存储模块之数据库模块**\n3. **数据存储之缓存模块**\n4. **会话管理模块**\n5. **任务调度模块**\n6. **邮件发送模块**\n7. **配置模块**\n8. **其他模块**  \n可以用下图来表示它们之间的关系：  \n![](images/sys.png)  \n下面，让我来一一介绍它们……",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/frontend.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 前端  \n*对于任何的 Web 项目来说，前端是用户对项目的第一印象。*  \n---  \n准确的来说，这个项目并不需要依赖前端。  \n但是，如果想让普通用户使用抢课系统，那么就不得不开发出一个对普通用户友好的前端界面。  \n这个项目的前端非常简单，没有用到什么特别且高大上的技术栈。  \n我使用了如今再正常不过的 `Vue3 + Element-Plus` 主流前端技术来构建整个前端项目。  \n其中 `Vue3` 用于快速构建工程化前端项目，`Element-Plus` 用于快速构建可视化界面。  \n本项目的前端包含两部分：  \n1. **前台系统**  \n这个就是所有用户都能访问的界面，也就是项目首页。它的受众群体是所有用户。  \n在前台中，用户可以进行**预约抢课**、**查询选课进度**这两个操作。  \n2. **后台系统**",
+        "score": 0.25
+      },
+      {
+        "source": "snatcher/backend.md",
+        "section": "为什么选择它作为后端框架？",
+        "subsection": "",
+        "content": "- **Tornado**：  \n一个专注于异步协议的轻量级 Python 后端框架。  \n按理说它就是这个项目最合适的后端框架了，但是我为什么没有选择它呢？  \n这个原因可能有些荒唐但又显得不这么荒唐：因为我在写这个项目的时候还没有学过这个框架😂。  \n在此之前我刚好学会了 FastAPI 这个框架，但还没有一个具体项目的实践，因此就阴差阳错的选择了 FastAPI 作为本项目的后端框架。  \n当然，FastAPI 相较于 Tornado 来说还是有许多优点的：  \n1. **高性能**。  \n虽然该优点没有在这个项目中发挥出来，但是凭借这一点却使他在所有的 Python 后端框架中脱颖而出。  \n2. **丰富的社区资源**。  \n在 GitHub 中，它的关注量仅次于 Django 框架。这表明它有着丰富的社区资源，遇到问题也可以快速定位并解决。",
+        "score": 0.2
+      },
+      {
+        "source": "snatcher/mail.md",
+        "section": "",
+        "subsection": "",
+        "content": ">\n> - 如果是选课失败的邮件，那么都会使用文本类型的邮件发送器发送邮件。\n> - 如果是选课成功的邮件，并且在配置文件中指定了使用腾讯云来发送邮件，那么就会使用腾讯云邮件发送器；否则使用超文本标记语言邮件发送器。  \n针对这么多情况的选择，这里使用了设计模式中的`工厂方法模式`来获取符合条件的邮件发送器。  \n它位于该模块下的 `EmailSenderFactory` 类。  \n为了让其他模块更方便地使用邮件发送功能，这里统一定义了一个函数：`send_email`。  \n这个函数可以根据传入的参数来自动判断应该调用的邮件发送器来发送邮件。  \n因此你不需要自己调用那些邮件发送器，你只需要调用这个函数就可以很方便地发送邮件了。",
+        "score": 0.1667
+      }
+    ],
+    "agent_answer": "## Auperator 记忆服务介绍\n\nAuperator 的记忆服务基于 **Qdrant 向量数据库**构建，提供语义搜索能力，让 AI Agent 能够记住历史问题和解决方案，实现长期记忆功能。它的核心代码位于 `services/memory_service.py`。\n\n---\n\n### 一、记忆分区（Sections）\n\n记忆服务目前支持 **3 个分区**（引自 [数据模型 - 记忆条目](auperator/docs/backend/services/memory.md)）：\n\n| 分区 | 说明 |\n|------|------|\n| **problems** | 记录历史出现的问题（如错误日志、异常信息） |\n| **solutions** | 记录问题的解决方案（与具体问题关联） |\n| **context** | 记录上下文信息，辅助 Agent 理解场景 |\n\n---\n\n### 二、如何使用记忆服务\n\n#### 方式 1：Python SDK 方式（后端集成）\n\n**保存记忆**（引自 [与 Agent 集成 - 保存学习成果](auperator/docs/backend/services/memory.md)）：\n\n```python\nmemory_service = MemoryService()\n\n# 保存问题\nawait memory_service.save(\n    section=\"problems\",\n    content=log_message,\n)\n\n# 保存解决方案\nawait memory_service.save(\n    section=\"solutions\",\n    content=f\"问题: {log_message}\\n解决方案: {fix_result}\",\n    metadata={\"related_problem\": log_message},\n)\n```\n\n**搜索记忆**（引自 [日志分析 Agent](auperator/docs/backend/services/memory.md)）：\n\n```python\n# 查询相似历史问题\nsimilar = await memory_service.search(\n    query=log_message,\n    section=\"problems\",  # 指定分区搜索\n    limit=3,            # 返回数量\n)\n```\n\n#### 方式 2：REST API 方式\n\n| 端点 | 方法 | 说明 |\n|------|------|------|\n| `GET /memory` | GET | 获取记忆列表 |\n| `POST /memory` | POST | 添加新记忆（请求体含 `section`、`content`、`metadata`） |\n| `GET /memory/search?q=query` | GET | 语义搜索记忆 |\n\n**添加记忆示例**（引自 [API 参考 - 记忆管理](auperator/docs/backend/api-reference.md)）：\n```json\n{\n  \"section\": \"problems\",\n  \"content\": \"数据库连接超时问题...\",\n  \"metadata\": {}\n}\n```\n\n#### 方式 3：前端 API 客户端\n\n```typescript\n// 搜索记忆（支持指定分区）\nconst memories = await api.searchMemories(query, {\n  section?: string,   // 记忆分区，如 \"problems\"\n  limit?: number      // 返回数量\n});\n```\n\n---\n\n### 三、工作流程示意\n\n1. **遇到问题** → Agent 将日志问题保存到 `problems` 分区\n2. **修复问题** → Agent 将修复方案保存到 `solutions` 分区\n3. **下次遇到相似问题** → Agent 通过语义搜索查询历史记录，快速定位已知解决方案\n\n这样形成的闭环让 Auperator 在运维过程中越来越\"聪明\"，能基于历史经验自动分析并修复问题。"
+  },
+  {
+    "index": 7,
+    "question": "Vector 在 Auperator 系统中起什么作用？它的配置包含哪些关键步骤？",
+    "ground_truth": "Vector 是日志采集工具，负责从 Docker 容器捕获日志并进行处理和发送。关键配置步骤：(1) Source 阶段——从 Docker 容器捕获日志；(2) Transform 阶段——merged_logs 进行多行日志聚合（合并 Python Traceback、Java Stack Trace 等多行错误），error_only_filter 按关键词（error、exception、traceback、critical、fatal、5xx 状态码）过滤错误日志；(3) Sink 阶段——通过 HTTP 发送到 Auperator API 的 /vector/ingest 端点，JSON 编码，批量发送（max_events=10，timeout_secs=5），重试 3 次。",
+    "ideal_contexts": [
+      "使用专业的日志处理工具 Vector.dev 进行日志采集和处理。",
+      "多行日志聚合：自动合并多行错误日志（如 Python Traceback、Java Stack Trace）。",
+      "智能过滤：基于关键词和模式的错误日志过滤。",
+      "实时处理：流式处理，低延迟。结构化输出：统一的 JSON 格式输出。",
+      "Vector 配置 source 从 Docker 采集，transform 包括 merged_logs（多行聚合）和 error_only_filter（错误过滤），sink 发送到 HTTP API。",
+      "HTTP sink 配置：uri http://172.17.0.1:7000/vector/ingest，编码 JSON，批量 max_events=10，重试 3 次。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/introduce.md",
+        "section": "它有什么特点？",
+        "subsection": "",
+        "content": "2. **支持提前提交选课任务**  \n即使还没到选课时间，你也可以在系统上提交选课任务，因为系统内部会自动判断当前时间是否是选课时间。  \n3. **支持查询选课进度**  \n当你在系统上提交了你的选课申请，那么当选课开始时，系统内部会记录每一步选课动作，你可以通过系统提供的接口来查询你的选课进度。  \n4. **后台可监听所有选课任务进度**  \n这个功能对于网站管理员来说是尤为重要的，系统管理员可以以一个上帝视角去实时查看所有的选课进度。  \n5. **显示课程的已选择人数**  \n如果你急切地想看到意向课程的选课情况，并且又进不去教务系统。那么不用担心，系统内部会每隔一段时间从教务系统中获取课程的已选择人数，并展示到系统的相关页面。  \n6. **不使用账号密码也能选课**  \n如果你不想泄露你的密码，那么抢课系统也提供了一个不用密码的抢课渠道。",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/core.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 系统核心模块介绍  \n*核心模块是整个系统最为重要的部分，它保证了整个智能抢课系统的稳定运行。*  \n---  \n在前面的章节中我粗略的介绍了这个系统的前端和后端部分。但是由于它们都是这个系统的次要部分，因此我没有详细地对它们的设计逐步展开介绍。  \n但是，接下来的核心模块部分，是这个系统中最最重要的部分。所以我将以模块的形式来一一介绍它们。  \n现在，我将核心系统分为以下几个部分：  \n1. **课程选择器模块**\n2. **数据存储模块之数据库模块**\n3. **数据存储之缓存模块**\n4. **会话管理模块**\n5. **任务调度模块**\n6. **邮件发送模块**\n7. **配置模块**\n8. **其他模块**  \n可以用下图来表示它们之间的关系：  \n![](images/sys.png)  \n下面，让我来一一介绍它们……",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/configuration.md",
+        "section": "模块介绍",
+        "subsection": "",
+        "content": ">\n> 这些类在创建时的资源开销是非常大的，因此我不希望开销这么多的资源去创建它。\n>\n> 用一个词来概括上面的话：单例。  \n那么配置类是不是也应该使用一个单例呢？  \n你可以设想，这个配置类里的属性会自它被创建开始都会保持不变，因此创建多个配置类是没有意义的。  \n那我们应该如何实现单例模式呢？  \n我们可以将这个类的对象保存到类属性中，如果这个类属性为空，那么就创建对象；否则直接返回这个对象。  \n> [!tip|label:为什么将对象保存到类属性中就能保证单例了呢？]\n>\n> 这里涉及到了 Python 中类的加载时机。说的简单点就是：当一个类被引入时，它的所有类属性以及定义在类板块中的逻辑都会被加载和执行，**并且相关的类属性都只会被加载一次**。\n>\n> 这是一个简单的例子：\n>\n> ```python\n> class A:\n>     print('loading')",
+        "score": 0.25
+      },
+      {
+        "source": "snatcher/configuration.md",
+        "section": "模块介绍",
+        "subsection": "",
+        "content": "配置当前环境是否是开发环境。默认为 `True`。  \n这个选项貌似只在数据库连接那里有效。如果这个值为真，那么在连接数据库时就会读取根目录下的 `mongodb_dev` 文件；否则会读取 `mongodb` 文件。  \n这个配置是在本地开发的时候为了不将数据库配置泄露出去而新增的配置。  \n**在你使用这个项目的时候应该将它的值改为 `False`。**  \n2. `DATABASES`  \n数据库连接配置项。  \n当前的配置主要是 `Redis` 和 `MongoDB`。其中后者的配置会动态读取，当然你也可以直接在这个配置中编写连接配置。  \n3. `TIMEOUT`  \n全局选课超时时间，默认为 2 个小时。  \n课程选择器发送的每一个请求都是带上这个超时时间。  \n4. `SETTING_SESSION_TIMEOUT`  \n登录超时时间，默认为 1 个小时。",
+        "score": 0.2
+      },
+      {
+        "source": "snatcher/frontend.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 前端  \n*对于任何的 Web 项目来说，前端是用户对项目的第一印象。*  \n---  \n准确的来说，这个项目并不需要依赖前端。  \n但是，如果想让普通用户使用抢课系统，那么就不得不开发出一个对普通用户友好的前端界面。  \n这个项目的前端非常简单，没有用到什么特别且高大上的技术栈。  \n我使用了如今再正常不过的 `Vue3 + Element-Plus` 主流前端技术来构建整个前端项目。  \n其中 `Vue3` 用于快速构建工程化前端项目，`Element-Plus` 用于快速构建可视化界面。  \n本项目的前端包含两部分：  \n1. **前台系统**  \n这个就是所有用户都能访问的界面，也就是项目首页。它的受众群体是所有用户。  \n在前台中，用户可以进行**预约抢课**、**查询选课进度**这两个操作。  \n2. **后台系统**",
+        "score": 0.1667
+      }
+    ],
+    "agent_answer": "根据知识库中的文档，以下是关于 **Vector 在 Auperator 系统中的作用及配置关键步骤** 的详细解答。\n\n---\n\n## 一、Vector 在 Auperator 中的作用\n\nVector 是 Auperator 系统中的**日志采集与处理组件**，负责整个智能运维流程的**第一步——日志数据采集和过滤**。具体作用可分为以下三个环节（来源：[CLI 模式数据流](auperator/README.md)）：\n\n| 步骤 | 作用 |\n|------|------|\n| **1. 采集日志** | 采集 Docker 容器的运行日志 |\n| **2. 过滤错误日志** | 从采集到的日志中，过滤出包含 `error`、`exception`、`traceback`、`5xx` 等关键字的错误日志 |\n| **3. 发送至 API** | 将过滤后的错误日志发送到 Auperator 的 API 接口 `/vector/ingest`，供后续的日志模板提取（Drain3）、去重、Agent 自动修复等环节使用 |\n\n简单来说，Vector 充当了 Auperator **智能运维闭环的数据入口**，它从 Docker 容器中抓取日志 → 过滤出真正的异常信息 → 传递给后端进行智能分析与修复。\n\n---\n\n## 二、Vector 配置的关键步骤\n\n### 1. 配置文件位置\nVector 的配置通过项目根目录下的以下文件进行管理（来源：[项目结构](auperator/README.md)）：\n- **`vector.yaml`** — 实际的日志采集配置文件\n- **`vector.example.yaml`** — 配置示例模板（供参考）\n\n### 2. 启动配置\n在部署时，需要使用以下命令启动 Vector 服务（来源：[快速开始 - 启动服务](auperator/README.md)）：\n```bash\nvector --config vector.yaml\n```\n\n### 3. 关键配置内容（扩展日志源）\n如果需要添加新的日志采集源，则需要编辑 `vector.yaml` 文件。例如，添加文件类型的日志源时（来源：[扩展性 - 添加新的日志源](auperator/docs/backend/architecture.md)）：\n\n```yaml\nsources:\n- type: docker_logs\n  # ... Docker 容器日志采集配置\n- type: file\n  include_patterns:\n    - /var/log/**/*.log     # 采集指定路径下的日志文件\n```\n\n### 4. 总结配置步骤\n1. **编辑配置文件**：修改项目根目录下的 `vector.yaml`，配置日志源（如 Docker 日志、文件日志等）\n2. **配置过滤规则**：定义需要捕获的错误关键字（如 `error`、`exception` 等）\n3. **配置输出目标**：确保日志发送到 Auperator API 的 `/vector/ingest` 端点\n4. **启动服务**：使用 `vector --config vector.yaml` 命令启动 Vector\n\n---\n\n> ⚠️ **说明**：如果知识库中关于 `vector.yaml` 内部具体字段的详细配置说明有限，建议参考 [vector.example.yaml](auperator/README.md) 示例文件中的详细配置进行自定义调整。"
+  },
+  {
+    "index": 8,
+    "question": "Auperator 包含哪些 Agent 执行后端？Daytona Sandbox 有什么特点？",
+    "ground_truth": "Auperator 包含 3 个执行后端：(1) Daytona Sandbox（默认）——安全的代码执行环境，特点包括隔离执行、可重现、支持多种语言，默认所有需要执行的代码都路由到此后端；(2) Local Shell——以 /local 开头的路径路由到此后端，用于访问本地文件系统，生产环境慎用；(3) Filesystem——负责文件读写操作，接口包括 read、write、edit、ls、glob、grep。",
+    "ideal_contexts": [
+      "执行后端：Daytona Sandbox（默认，隔离执行、可重现、支持多种语言）、Local Shell（/local 路径，访问本地文件系统）、Filesystem（文件读写操作）",
+      "Daytona Sandbox 特点：隔离执行、可重现、支持多种语言。默认所有需要执行的代码路由到 Daytona。",
+      "Filesystem 接口：read, write, edit, ls, glob, grep。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/backend.md",
+        "section": "为什么选择它作为后端框架？",
+        "subsection": "",
+        "content": "- **Tornado**：  \n一个专注于异步协议的轻量级 Python 后端框架。  \n按理说它就是这个项目最合适的后端框架了，但是我为什么没有选择它呢？  \n这个原因可能有些荒唐但又显得不这么荒唐：因为我在写这个项目的时候还没有学过这个框架😂。  \n在此之前我刚好学会了 FastAPI 这个框架，但还没有一个具体项目的实践，因此就阴差阳错的选择了 FastAPI 作为本项目的后端框架。  \n当然，FastAPI 相较于 Tornado 来说还是有许多优点的：  \n1. **高性能**。  \n虽然该优点没有在这个项目中发挥出来，但是凭借这一点却使他在所有的 Python 后端框架中脱颖而出。  \n2. **丰富的社区资源**。  \n在 GitHub 中，它的关注量仅次于 Django 框架。这表明它有着丰富的社区资源，遇到问题也可以快速定位并解决。",
+        "score": 0.5
+      },
+      {
+        "source": "auperator/README.md",
+        "section": "项目结构",
+        "subsection": "",
+        "content": "│       │   │   ├── sandbox.py   # Daytona 沙箱后端\n│       │   │   ├── daytona_sandbox.py # Daytona SDK 后端\n│       │   │   ├── composite.py # 组合后端\n│       │   │   ├── state.py     # 内存状态后端\n│       │   │   ├── filesystem.py # 文件系统后端\n│       │   │   ├── store.py     # 持久化存储后端\n│       │   │   └── utils.py     # 后端工具函数\n│       │   ├── middleware/      # Agent 中间件",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/frontend.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 前端  \n*对于任何的 Web 项目来说，前端是用户对项目的第一印象。*  \n---  \n准确的来说，这个项目并不需要依赖前端。  \n但是，如果想让普通用户使用抢课系统，那么就不得不开发出一个对普通用户友好的前端界面。  \n这个项目的前端非常简单，没有用到什么特别且高大上的技术栈。  \n我使用了如今再正常不过的 `Vue3 + Element-Plus` 主流前端技术来构建整个前端项目。  \n其中 `Vue3` 用于快速构建工程化前端项目，`Element-Plus` 用于快速构建可视化界面。  \n本项目的前端包含两部分：  \n1. **前台系统**  \n这个就是所有用户都能访问的界面，也就是项目首页。它的受众群体是所有用户。  \n在前台中，用户可以进行**预约抢课**、**查询选课进度**这两个操作。  \n2. **后台系统**",
+        "score": 0.25
+      },
+      {
+        "source": "snatcher/backend.md",
+        "section": "为什么选择它作为后端框架？",
+        "subsection": "",
+        "content": "在 Python 中，有许多优秀的后端框架，它们包括但不限于以下：  \n- **Django**：  \n一个适合构建全栈项目的 Python 后端重量级框架。整个框架都围绕“开箱即用”而展开，里面包含了丰富的后端开发工具。它可以说是在 Python 中最流行、社区最大的后端框架。  \n但是正是由于它包含了太多这个项目不需要的工具，然而我的这个项目本身也不算太大，如果此时引入这个框架只会增加项目的复杂度，这使得整个项目也会成为“重量级”项目。  \n因此我排除了它。  \n- **Flask**：  \n一个轻量级的 Python 后端框架。  \n但是这个框架对于异步的支持度不大高，而抢课系统本身是基于异步模型展开的，所以我也将它给排除了。  \n- **Tornado**：  \n一个专注于异步协议的轻量级 Python 后端框架。",
+        "score": 0.2
+      },
+      {
+        "source": "snatcher/schedule.md",
+        "section": "模块说明",
+        "subsection": "",
+        "content": "这个模块位于：`/snatcher/aiotasks.py`下。  \n这个模块下有 4 个函数或类：  \n1. `select_course_task`  \n选课任务，它是一个 Arq 任务，会被延时执行。  \n它根据传入的任务类型获取对应的课程选择器，再将参数传给选择器执行器，再有由执行器来执行选课逻辑。  \n2. `select_course`  \n它也是一个 Arq 任务，但他不是选课任务，它是选课任务的生产者，由后端调用。  \n它在执行时就将当前学号提前模拟登录并保存登录信息，最后发送一个延时选课任务。  \n3. `query_selected_number_task`  \n一个定时任务，专门用于轮询查询指定课程类型课程的已选择人数，并保存到缓存中。后端再读取缓存中的数据，返回给前端。  \n4. `WorkerSettings`",
+        "score": 0.1667
+      }
+    ],
+    "agent_answer": "## Auperator 包含的 Agent 执行后端\n\n根据知识库文档，Auperator 的 Agent 执行后端位于 `deepagents/backends/` 目录下，共包含以下后端实现：\n\n| 后端文件 | 说明 |\n|----------|------|\n| `protocol.py` | 后端协议定义 |\n| `local_shell.py` | **本地 Shell 后端** |\n| `sandbox.py` | **Daytona 沙箱后端** |\n| `daytona_sandbox.py` | **Daytona SDK 后端** |\n| `composite.py` | **组合后端** |\n| `state.py` | **内存状态后端** |\n| `filesystem.py` | **文件系统后端** |\n| `store.py` | **持久化存储后端** |\n| `utils.py` | 后端工具函数 |\n\n> 来源：`auperator/README.md` > 项目结构\n\n---\n\n## Daytona Sandbox 的特点\n\n根据知识库文档，Daytona Sandbox 具有以下特点：\n\n1. **隔离的代码运行环境** — 内置隔离的代码沙箱，用于安全执行修复代码，确保不会影响生产环境。（来源：`auperator/README.md` > 核心功能 > 3. 自动修复）\n\n2. **安全代码执行** — 在技术选型中，Daytona 被明确用作**代码沙箱**组件，负责提供安全的代码执行能力。（来源：`auperator/docs/backend/architecture.md` > 技术选型）\n\n3. **支持完整的自动修复流程** — 在 Agent 自动修复工作流中，Daytona 沙箱用于：\n   - 克隆代码仓库\n   - 定位问题代码\n   - 实施修复\n   - 运行测试验证\n   \n   （来源：`auperator/README.md` > 工作流程示例 > CLI 模式）\n\n4. **提供沙箱管理 API** — 支持通过 REST API 在沙箱中执行命令，例如通过 `POST /sandbox/workspaces/{workspace_id}/execute` 在沙箱内运行命令。（来源：`auperator/docs/backend/api-reference.md` > 沙箱管理）\n\n5. **支持配置集成** — 通过 `DAYTONA_API_KEY` 和 `DAYTONA_API_URL` 等配置项进行集成，默认指向 `https://app.daytona.io/api`。（来源：`auperator/docs/backend/getting-started.md` > 配置）\n\n---\n\n**总结**：Daytona Sandbox 是 Auperator 中一个核心的**隔离代码执行环境**，Agent 在其中安全地进行代码分析、修复和测试，是实现\"自动修复闭环\"的关键基础设施。"
+  },
+  {
+    "index": 9,
+    "question": "Auperator 如何实现自动修复的完整流程？",
+    "ground_truth": "自动修复流程分为 5 个步骤：(1) 错误日志产生（如 'ERROR: Connection refused to 10.0.0.1:5432'）；(2) Vector 采集并发送结构化 JSON 日志到 API；(3) Drain3 提取日志模板（如提取为 'ERROR: Connection refused to <*:<:NUM:>>'），仅新模板才会推送到 Redis List；(4) Agent Worker 消费 Redis List 中的新模板日志并进行 Agent 处理——在 Daytona 沙箱中克隆代码、定位问题代码、实施修复、运行测试验证；(5) 提交 PR 完成修复闭环。整个流程通过多 Agent 协作完成：log_analysis → fix → validation → pr。",
+    "ideal_contexts": [
+      "Auperator 致力于解决传统运维系统中的痛点，通过引入 AI Agent 技术，实现从问题发现到修复的全自动化闭环。",
+      "CLI 模式数据流：Vector 采集 Docker 容器日志 → Vector 过滤错误日志 → 发送到 Auperator API → Drain3 提取模板去重 → 推送到 Redis List → Agent Handler 消费并调用 Agent 修复",
+      "Agent 处理：分析错误原因 → 在 Daytona 沙箱中克隆代码 → 定位问题代码 → 实施修复 → 运行测试验证 → 提交 PR",
+      "多 Agent 协作：log_analysis → fix → validation → pr"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "auperator/README.md",
+        "section": "概述",
+        "subsection": "",
+        "content": "Auperator 致力于解决传统运维系统中的痛点：被动响应、依赖人工分析、修复周期长。通过引入 AI Agent 技术，实现从问题发现到修复的全自动化闭环。  \n**双界面模式**：  \n- **CLI 模式**：命令行界面，用于日志消费和自动修复\n- **Web UI 模式**：基于 Next.js 的聊天界面，支持实时对话和事件流",
+        "score": 0.75
+      },
+      {
+        "source": "snatcher/schedule.md",
+        "section": "如何实现并发？",
+        "subsection": "",
+        "content": "由于选课是 IO 密集型任务，因此使用多线程来实现并发是最为合适的。但是，一旦当选课任务多起来，比如有 100 多个选课任务，那么我是不是应该也创建 100 多个线程呢？  \n其实线程不是越多越好，创建过多的线程还会导致任务执行效率低下。因为多个线程之间需要不断地切换上下文，而切换上下文的过程是较为耗时的，所以多线程的创建也是一个难题。  \n3. **协程**  \n协程是一种轻量级线程。下面是协程和线程间的区别：  \n- **线程处在操作系统中的内核态，而协程则处在用户态。**\n- **线程必须由操作系统调度，而协程完全由用户调度。**\n- **线程上下文间的切换较慢，而协程上下文间的切换较快。**  \n也就是说，协程是比线程更小的执行单位，而且一个协程就能实现并发，这是协程非常重要的特性。  \n有关协程的工作原理可以自行在网上查阅相关资料，这里就详细展开说明了……",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/selector.md",
+        "section": "异步选择器文件",
+        "subsection": "",
+        "content": "打开这个文件，你将会看到 3 个非常重要的类：  \n1. `AsyncCourseSelector`  \n异步课程选择器，它是 `BaseCourseSelector` 类的一个派生类。它实现了异步选择器的公用方法，比如 `select`、`set_jxb_ids`等，这些方法的逻辑都是一成不变的，因此为了提高代码复用性，这里统一写在同一个父类中。  \n2. `AsyncPCSelector`  \n异步公选课课程选择器，专门实现公选课选课逻辑。  \n3. `AsyncPESelector`  \n异步体育课课程选择器，专门实现体育课选课逻辑。  \n因此在这么多的选择器中，外部调用者应该调用的是后两个选择器，因为只有它们才实现了完整的选课逻辑，它们的父类或祖先类都是为了让子类能更好的实现相应的逻辑而作出的抽象和封装。",
+        "score": 0.3333
+      },
+      {
+        "source": "auperator/README.md",
+        "section": "",
+        "subsection": "",
+        "content": "# Auperator  \n> **Automation Operator** - 智能运维 Agent  \nAuperator 是一个基于 DeepAgents 架构的智能运维系统，能够自动监控 Web 应用、收集日志、智能分析并修复问题，最终通过提交 PR 完成闭环修复。",
+        "score": 0.3333
+      },
+      {
+        "source": "auperator/docs/index.md",
+        "section": "项目链接",
+        "subsection": "",
+        "content": "- [GitHub 仓库](https://github.com/thcpdd/auperator)\n- [问题反馈](https://github.com/thcpdd/auperator/issues)",
+        "score": 0.25
+      }
+    ],
+    "agent_answer": "根据知识库中的文档，以下是 Auperator 自动修复的**完整闭环流程**：\n\n---\n\n## 🔄 Auperator 自动修复完整流程\n\n### 一、架构概览\nAuperator 基于 **DeepAgents 架构**，核心是一个智能运维 Agent，通过以下组件协同工作：\n\n| 组件 | 作用 |\n|------|------|\n| **Vector（日志采集）** | 负责收集 Web 应用日志 |\n| **Redis List** | 日志消息队列，存储待处理的日志 |\n| **DeepAgents 智能体** | 分析问题、决策并执行修复 |\n| **Daytona 代码沙箱** | 隔离的代码运行环境，安全执行修复代码 |\n| **Qdrant 向量库** | 记忆系统，支持长期经验积累 |\n\n---\n\n### 二、完整流程步骤\n\n#### 1️⃣ 日志采集（Vector）\n- 使用 **Vector** 工具采集 Web 应用的运行日志\n- 将日志格式化为标准 JSON 消息\n\n#### 2️⃣ 日志推送（Redis）\n日志被推送到 Redis List 队列中，格式示例：\n```json\n{\n  \"message\": \"ERROR: Connection refused to <*:<:NUM:>>\",\n  \"cluster_id\": 1,\n  \"timestamp\": \"2026-04-04T14:30:00Z\"\n}\n```\n\n#### 3️⃣ Agent 消费与问题分析\nAgent 启动后（`auperator start`），从 Redis List 中消费日志，**基于日志模板分析错误根因**。例如：分析出\"数据库连接失败\"。\n\n> 这里用到 **`log_analysis.py`** 日志分析 Agent 的提示词。\n\n#### 4️⃣ 代码沙箱定位问题\n- 在 **Daytona 沙箱**中克隆项目代码（隔离环境，安全执行）\n- 定位问题代码位置（例如：缺少数据库配置）\n\n#### 5️⃣ 实施修复\n- 使用 **代码修复 Agent**（`fix.py`）在沙箱中实施修复\n- 例如：添加缺失的数据库配置文件\n- 运行测试验证修复是否有效（使用 **验证 Agent** `validation.py`）\n\n#### 6️⃣ 提交 PR 完成闭环\n- 自动创建新的 Git 分支\n- 提交修复代码\n- 发起 **Pull Request**（使用 **PR Agent** `pr.py`）\n- 记忆系统（**Qdrant 向量存储**）记录本次修复经验，用于后续类似问题的快速定位\n\n---\n\n### 三、启动方式\n\n要启动自动修复模式，执行以下命令：\n\n```bash\n# 启动 API 服务\nauperator server\n\n# 启动 Vector 日志采集\nvector --config vector.yaml\n\n# 启动自动修复模式（Agent 开始消费日志并自动修复）\nauperator start\n```\n\n> 相关文档：*Auperator README.md - 核心功能 > 3. 自动修复（AI Agent）*、*工作流程示例 > CLI 模式 - 自动修复流程*\n\n---\n\n### 四、核心能力总结\n\n| 环节 | 能力 |\n|------|------|\n| 🔍 **问题分析** | 基于日志模板，分析错误根因 |\n| 🧪 **代码沙箱** | 内置隔离的代码运行环境，安全执行修复代码 |\n| 🛠 **自动修复** | 在沙箱中定位问题、实施修复、运行测试 |\n| 📤 **PR 提交** | 自动创建分支、提交代码、发起 Pull Request |\n| 🧠 **记忆系统** | 基于 Qdrant 向量存储，支持长期记忆和复用经验 |\n\n这样就从 **\"日志采集 → 问题分析 → 沙箱修复 → 测试验证 → 提交PR\"** 形成了一个完整的自动化运维闭环。"
+  },
+  {
+    "index": 10,
+    "question": "Auperator Web UI 提供了哪些 API 端点？如何实现实时通信？",
+    "ground_truth": "Web UI 的 API 端点分为三类：(1) 聊天相关——POST/GET/DELETE /chat/conversations、POST /chat/messages、GET /chat/conversations/{id}/messages；(2) 事件流——POST /events/web-ui（SSE 端点，接收 Agent 实时事件）、POST /events/docker-logs（Docker 日志流）；(3) 记忆管理——GET /memory、POST /memory、GET /memory/search?q=query。实时通信基于 SSE（Server-Sent Events）实现。前端使用 EventSource 连接 SSE 端点，Agent 处理过程中实时推送中间状态（agent 事件，包含 event_type、content、agent_name）。",
+    "ideal_contexts": [
+      "聊天 API：POST/GET /chat/conversations、PUT/DELETE /chat/conversations/{id}、POST /chat/messages、GET /chat/conversations/{id}/messages",
+      "事件流：POST /events/web-ui（SSE，事件格式包含 event_type、content、agent_name）、POST /events/docker-logs",
+      "记忆管理：GET /memory、POST /memory、GET /memory/search?q=query",
+      "实时通信基于 SSE，Agent 处理过程中会实时推送中间状态。",
+      "前端使用 EventSource 连接 SSE，接收 agent 事件并实时显示。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/database.md",
+        "section": "",
+        "subsection": "",
+        "content": "> from django.core.cache import caches\n>\n> custom_cache = caches['your_cache_name']\n> ```\n>\n> 不管是哪一种代码，Django 的实现方式其实都是类似的，它们都通过对象的特殊接口 + 资源懒加载的形式实现。因此我的封装灵感来源于 Django 源码。\n>\n> **所以，阅读一些框架源码可以在很大程度上提高你的工程能力。这点是绝大多数程序员容易忽略的一点。**  \n2. `shortcuts.py`  \n它提供了一些操作数据库的快捷函数。  \n通过上述的一系列封装，其它模块就可以很方便的使用这些对象来操作数据库了。",
+        "score": 0.5
+      },
+      {
+        "source": "auperator/deploy/README.md",
+        "section": "Nginx 配置",
+        "subsection": "生产部署建议",
+        "content": "server {\nlisten 80;\nserver_name your-domain.com;\n\n# Web UI\nlocation / {\nproxy_pass http://auperator_web;\nproxy_http_version 1.1;\nproxy_set_header Upgrade $http_upgrade;\nproxy_set_header Connection 'upgrade';\nproxy_set_header Host $host;\nproxy_set_header X-Real-IP $remote_addr;\nproxy_cache_bypass $http_upgrade;\n}",
+        "score": 0.5
+      },
+      {
+        "source": "auperator/README.md",
+        "section": "快速开始",
+        "subsection": "启动服务",
+        "content": "#### 完整启动（后端 + 前端 + Vector）  \n```bash\n# 终端 1: 启动 Auperator API 服务\nauperator server\n\n# 终端 2: 启动 Vector（用于日志采集）\nvector --config vector.yaml\n\n# 终端 3: 启动 Web UI\ncd src/web\nnpm run dev\n# 或\npnpm dev\n\n# 终端 4: 启动自动修复模式（可选）\nauperator start\n```  \n#### 仅启动 Web UI  \n```bash\n# 终端 1: 启动 API 服务\nauperator server",
+        "score": 0.375
+      },
+      {
+        "source": "snatcher/selector.md",
+        "section": "异步选择器文件",
+        "subsection": "",
+        "content": "打开这个文件，你将会看到 3 个非常重要的类：  \n1. `AsyncCourseSelector`  \n异步课程选择器，它是 `BaseCourseSelector` 类的一个派生类。它实现了异步选择器的公用方法，比如 `select`、`set_jxb_ids`等，这些方法的逻辑都是一成不变的，因此为了提高代码复用性，这里统一写在同一个父类中。  \n2. `AsyncPCSelector`  \n异步公选课课程选择器，专门实现公选课选课逻辑。  \n3. `AsyncPESelector`  \n异步体育课课程选择器，专门实现体育课选课逻辑。  \n因此在这么多的选择器中，外部调用者应该调用的是后两个选择器，因为只有它们才实现了完整的选课逻辑，它们的父类或祖先类都是为了让子类能更好的实现相应的逻辑而作出的抽象和封装。",
+        "score": 0.3333
+      },
+      {
+        "source": "auperator/README.md",
+        "section": "概述",
+        "subsection": "",
+        "content": "Auperator 致力于解决传统运维系统中的痛点：被动响应、依赖人工分析、修复周期长。通过引入 AI Agent 技术，实现从问题发现到修复的全自动化闭环。  \n**双界面模式**：  \n- **CLI 模式**：命令行界面，用于日志消费和自动修复\n- **Web UI 模式**：基于 Next.js 的聊天界面，支持实时对话和事件流",
+        "score": 0.3333
+      }
+    ],
+    "agent_answer": "## Auperator Web UI API 端点\n\n根据官方文档，Auperator Web UI 提供了以下几类 API 端点：\n\n### 1️⃣ 聊天相关\n\n| 方法 | 端点 | 说明 |\n|------|------|------|\n| `POST` | `/chat/conversations` | 创建对话 |\n| `GET` | `/chat/conversations` | 获取对话列表 |\n| `GET` | `/chat/conversations/{conversation_id}` | 获取对话详情 |\n| `PUT` | `/chat/conversations/{conversation_id}` | 更新对话标题 |\n| `DELETE` | `/chat/conversations/{conversation_id}` | 删除对话 |\n| `POST` | `/chat/messages` | 发送消息 |\n| `GET` | `/chat/conversations/{conversation_id}/messages` | 获取对话消息 |\n\n### 2️⃣ 事件流（实时通信）\n\n| 方法 | 端点 | 说明 |\n|------|------|------|\n| `POST` | `/events/web-ui` | Web UI 事件流（SSE），接收实时事件 |\n| `POST` | `/events/docker-logs` | Docker 日志流（SSE） |\n\n### 3️⃣ 内存管理\n\n| 方法 | 端点 | 说明 |\n|------|------|------|\n| `GET` | `/memory/search?q=query` | 搜索记忆 |\n| `POST` | `/memory` | 添加记忆 |\n| `GET` | `/memory` | 获取记忆列表 |\n\n---\n\n## 如何实现实时通信\n\nAuperator Web UI 采用 **SSE（Server-Sent Events，服务器推送事件）** 实现实时通信，具体数据流如下：\n\n1. **用户** 通过 Web UI 发送消息\n2. **前端** 调用 `POST /chat/messages`\n3. **后端** 在 SQLite 中创建对话记录，并将 USER 事件发布到 **Redis Stream**\n4. **AgentWorker** 消费事件并调用 Agent\n5. **Agent** 发布 AGENT 事件到 Redis Stream\n6. **前端** 通过 SSE 端点 `POST /events/web-ui`（请求体携带 `{\"thread_id\": \"optional-conversation-id\"}`）建立连接，实时接收事件流\n7. **前端** 接收到的事件格式如下（`text/event-stream`）：\n\n```\nevent: agent\ndata: {\"event_type\": \"AGENT\", \"content\": \"正在分析日志...\", \"agent_name\": \"main\"}\n\nevent: agent\ndata: {\"event_type\": \"AGENT\", \"content\": \"定位到问题代码...\", \"agent_name\": \"fix\"}\n```\n\n**核心机制总结**：后端通过 Redis Stream 作为消息中间件，Agent 的处理进度通过 SSE 实时推送给前端，从而实现 Agent 响应在 Web UI 上的实时展示。"
+  },
+  {
+    "index": 11,
+    "question": "智能抢课系统有哪些核心特点？和普通代码选课相比有什么优势？",
+    "ground_truth": "智能抢课系统有 3 个核心特点：(1) 自动获取选课参数——用户只需传入账号密码和意向课程，系统自动完成选课参数获取和选课逻辑；(2) 支持多人选课——内部使用消息队列同时处理多个选课任务；(3) 内部自动处理异常——自动重试（最多重试 3 次）、异常捕获等。额外亮点包括：易于普通用户使用的操作界面、支持提前提交选课任务（系统自动判断选课时间）、支持查看选课进度、管理员可后台监听所有选课进度、显示课程已选择人数、支持无密码选课。",
+    "ideal_contexts": [
+      "自动获取选课参数：只需要传入账号密码、意向课程就行了，剩下的工作选课系统会自己帮你完成。",
+      "支持多人选课：内部使用了消息队列来同时处理多个选课任务。",
+      "内部自动处理异常：在代码层面自动处理。",
+      "易于普通用户使用的操作界面、支持提前提交选课任务、支持查询选课进度、后台可监听所有选课任务进度、显示课程的已选择人数、不使用账号密码也能选课。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/introduce.md",
+        "section": "它有什么特点？",
+        "subsection": "",
+        "content": "1. **自动获取选课参数**  \n在上面我已经提到过了，你只需要传入账号密码、意向课程就行了。剩下的工作选课系统会自己帮你完成。  \n2. **支持多人选课**  \n内部使用了`消息队列`来**同时**处理多个选课任务。**所以你完全不需要担心需要排队选课的问题**。  \n3. **内部自动处理异常**  \n这是在代码层面的工作，这里不多介绍。  \n上面 3 点是普通代码选课所面临的缺陷，智能抢课系统都逐个解决了。  \n那么下面几点是选课系统额外的亮点：  \n1. **易于普通用户使用的操作界面**  \n这点是最重要的。我曾以 `正方` 、 `抢课` 、 `选课` 等等的关键字在 `GitHub` 上检索相关信息。但最终翻遍了整个 `GitHub`，都没有找到一个易于普通用户使用的抢课系统。  \n2. **支持提前提交选课任务**",
+        "score": 0.8333
+      },
+      {
+        "source": "snatcher/introduce.md",
+        "section": "它有什么特点？",
+        "subsection": "",
+        "content": "2. **支持提前提交选课任务**  \n即使还没到选课时间，你也可以在系统上提交选课任务，因为系统内部会自动判断当前时间是否是选课时间。  \n3. **支持查询选课进度**  \n当你在系统上提交了你的选课申请，那么当选课开始时，系统内部会记录每一步选课动作，你可以通过系统提供的接口来查询你的选课进度。  \n4. **后台可监听所有选课任务进度**  \n这个功能对于网站管理员来说是尤为重要的，系统管理员可以以一个上帝视角去实时查看所有的选课进度。  \n5. **显示课程的已选择人数**  \n如果你急切地想看到意向课程的选课情况，并且又进不去教务系统。那么不用担心，系统内部会每隔一段时间从教务系统中获取课程的已选择人数，并展示到系统的相关页面。  \n6. **不使用账号密码也能选课**  \n如果你不想泄露你的密码，那么抢课系统也提供了一个不用密码的抢课渠道。",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/introduce.md",
+        "section": "为什么叫智能抢课系统？",
+        "subsection": "",
+        "content": "这里的 `智能` 不是因为它真的运用到了 `AI` 。而是相对于人工选课和普通代码选课来说是智能的。  \n你使用它是一件非常简单的事情，你只需要先选择好你的课程，然后再填写你的账号密码提交即可。你完全不需要关注它的内部是如何实现的。并且当系统选好课程之后会自动发送一封邮件告诉你课程已经选好。  \n因此它对于普通用户来说几乎是无门槛的。",
+        "score": 0.4242
+      },
+      {
+        "source": "snatcher/selector.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 课程选择器模块  \n*它是智能抢课系统的强业务部分，就是它来帮我们完成选课。*  \n---",
+        "score": 0.25
+      },
+      {
+        "source": "snatcher/cache.md",
+        "section": "",
+        "subsection": "",
+        "content": "`index` 表示当前课程的优先级，每一个用户可能会提交多个意向课程，`index` 的数值越小，选择这门课程的优先级越高。  \n`fuel_id` 表示提交当前课程使用的 抢课码ID，因为用户查询选课进度需要用到抢课码进行查询。  \n下面我来简单叙述一下这个函数的运行过程：  \n1. 首先函数通过 抢课码ID 来过滤出这个抢课码对应的所有日志。  \n2. 接着以日志中的 `index` 字段进行排序，从而得到正确的日志顺序。  \n3. 此时我们已经得到了正确的日志序列。  \n4. 由于每一个日志可能包含错误信息和重试信息，因此需要将这些信息进一步整理。  \n5. 进入循环。  \n6. 每一条日志会返回最后一次尝试的日志以及重试次数。  \n7. 循环上述操作，直到清洗完所有日志。  \n8. 返回一个字典类型，类似于以下：  \n```python\nuser_log = {",
+        "score": 0.25
+      }
+    ],
+    "agent_answer": "根据知识库中的文档，我来为您详细介绍智能抢课系统的核心特点及其与普通代码选课相比的优势。\n\n---\n\n## 智能抢课系统的核心特点\n\n### 📌 基础核心功能（解决普通代码选课的缺陷）\n\n| 特点 | 说明 |\n|------|------|\n| **1. 自动获取选课参数** | 只需传入账号密码和目标课程，系统自动完成剩余工作，无需手动处理复杂的请求参数 |\n| **2. 支持多人同时选课** | 内部使用**消息队列**技术，可同时处理多个选课任务，无需排队等待 |\n| **3. 内部自动处理异常** | 从代码层面自动处理选课过程中可能出现的各种异常情况 |\n\n### 🌟 额外亮点功能\n\n| 特点 | 说明 |\n|------|------|\n| **4. 易于普通用户的操作界面** | 提供了友好的用户界面，不同于GitHub上大部分仅面向开发者的抢课工具 |\n| **5. 支持提前提交选课任务** | 即使未到选课时间，也可提前提交任务，系统会自动判断选课时间并执行 |\n| **6. 支持查询选课进度** | 系统会记录每一步选课动作，用户可通过接口实时查询选课进度 |\n| **7. 后台可监听所有选课任务** | 管理员可以以**上帝视角**实时查看所有选课进度 |\n| **8. 显示课程已选择人数** | 即使进不去教务系统，系统也会定期从教务系统获取并展示课程的已选人数 |\n| **9. 支持无密码选课** | 如果不希望泄露密码，系统提供了无需密码的抢课渠道 |\n\n---\n\n## 与普通代码选课相比的优势\n\n| 对比维度 | 普通代码选课 | 智能抢课系统 |\n|----------|-------------|-------------|\n| **操作门槛** | 需要手动抓包、写代码，门槛高 | ✅ 仅需输入账号密码和目标课程，普通用户可用 |\n| **多人选课** | 通常仅支持单线程/单账号 | ✅ 使用消息队列，支持多人并发选课 |\n| **异常处理** | 容易因异常中断，需手动维护 | ✅ 内部自动处理异常，稳定可靠 |\n| **提前提交** | ❌ 不支持 | ✅ 支持提前提交任务，系统自动定时执行 |\n| **进度反馈** | ❌ 无进度反馈 | ✅ 支持实时查询选课进度 |\n| **教学管理** | ❌ 无后台管理功能 | ✅ 管理员可全局监听所有选课任务 |\n| **信息安全** | 需明文存储密码 | ✅ 支持无密码选课渠道 |\n\n---\n\n> 以上内容来源于知识库文档：**《智能抢课系统》** 的介绍章节。如果您想了解系统更底层的实现细节，可以参考核心模块的相关文档。"
+  },
+  {
+    "index": 12,
+    "question": "课程选择器的类继承关系是怎样的？最终应该调用哪个选择器？",
+    "ground_truth": "课程选择器的继承关系为：BaseCourseSelector（基类）→ AsyncCourseSelector（异步选择器）→ 派生出 AsyncPCSelector（异步公选课选择器）和 AsyncPESelector（异步体育课选择器）。BaseCourseSelector 是所有选择器的基类，定义了 30 多个属性和模板方法，并实现了异步上下文管理器接口。AsyncCourseSelector 实现了公用方法如 select、set_jxb_ids。外部调用者应该调用 AsyncPCSelector（公选课）或 AsyncPESelector（体育课），因为只有它们实现了完整的选课逻辑。",
+    "ideal_contexts": [
+      "BaseCourseSelector 是所有课程选择器的基类，规定了标准课程选择器应有的属性和方法。",
+      "AsyncCourseSelector 是 BaseCourseSelector 的派生类，实现了异步选择器的公用方法。",
+      "AsyncPCSelector：异步公选课课程选择器，专门实现公选课选课逻辑。",
+      "AsyncPESelector：异步体育课课程选择器，专门实现体育课选课逻辑。",
+      "外部调用者应该调用 AsyncPCSelector 或 AsyncPESelector，因为只有它们实现了完整的选课逻辑。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/selector.md",
+        "section": "异步选择器文件",
+        "subsection": "",
+        "content": "打开这个文件，你将会看到 3 个非常重要的类：  \n1. `AsyncCourseSelector`  \n异步课程选择器，它是 `BaseCourseSelector` 类的一个派生类。它实现了异步选择器的公用方法，比如 `select`、`set_jxb_ids`等，这些方法的逻辑都是一成不变的，因此为了提高代码复用性，这里统一写在同一个父类中。  \n2. `AsyncPCSelector`  \n异步公选课课程选择器，专门实现公选课选课逻辑。  \n3. `AsyncPESelector`  \n异步体育课课程选择器，专门实现体育课选课逻辑。  \n因此在这么多的选择器中，外部调用者应该调用的是后两个选择器，因为只有它们才实现了完整的选课逻辑，它们的父类或祖先类都是为了让子类能更好的实现相应的逻辑而作出的抽象和封装。",
+        "score": 0.8333
+      },
+      {
+        "source": "snatcher/introduce.md",
+        "section": "系统设计思路",
+        "subsection": "",
+        "content": "4. 当到达任务设定的时间之后，`Arq-Worker`会不断的从任务队列中取出并执行任务。\n5. 当任务被执行后，调用相应的课程选择器来进行选课操作，期间任意一个关键步骤失败都会记录失败信息，失败后会重试。当到达最大重试次数后（这里设置的是 3 次），直接判定选课失败。\n6. 最后整个任务执行完毕。  \n+ ### 课程选择器设计思路  \n课程选择器的本质其实就是一个爬虫程序，只不过就是经过反复抽象，最终成为了一个可扩展性非常强的课程选择器类。  \n在`/snatcher/selector/base.py`下，定义了一个名为`BaseCourseSelector`的类，它是所有课程选择器类的父类。在这个类中定义了一个课程选择器应有的属性的抽象方法。  \n这个类派又生出一个类：`AsyncCourseSelector`，异步课程选择器类。",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/selector.md",
+        "section": "课程选择器基类文件",
+        "subsection": "这个类的所有属性",
+        "content": "通过上述表格可以看到一个标准的课程选择器包含了 30 多个属性，所以课程选择器的创建开销是非常大。因此我们应该避免频繁的创建和销毁课程选择器。  \n我们可以通过调用 `update_selector_info` 方法来不断更新选择器信息，从而到达到可以选择**同一类别不同课程**的目的。  \n> [!warning|label:注意]\n>\n> 同一类别不同课程指的是：体育课不同课程或公选课不同课程。  \n一个简单的调用例子：  \n```python\nasync def main():\nasync with selector_class(args, kwargs) as selector:\nfor course_info in courses:\nawait selector.update_selector_info(course_info)",
+        "score": 0.35
+      },
+      {
+        "source": "snatcher/selector.md",
+        "section": "课程选择器基类文件",
+        "subsection": "需要留意的几个方法",
+        "content": "- `set_kch_id`\n- `set_xkkz_id`\n- `set_jxb_ids`\n- `select`  \n这几个方法都是选课中的关键方法，前面 3 个方法是给最后一个方法做铺垫，也就是构造请求参数。最后一个方法是发送选课请求。  \n因此如果你想自己实现一个课程选择器，那么这 4 个方法应该是一个标准的模板方法。例如：  \n```python\nclass CustomCourseSelector:\ndef __init__(self):\nself.kch_id = None\nself.xkkz_id = None\nself.jxb_ids = None\n\ndef set_kch_id(self):\n...\nself.kch_id = '真实值'\n\ndef set_xkkz_id(self):\n...\nself.xkkz_id = '真实值'",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/selector.md",
+        "section": "课程选择器执行器文件",
+        "subsection": "",
+        "content": "打开这个文件，里面编写了一个异步函数和一个简单课程选择器执行器：  \n1. `async_selector_performer`  \n异步选择器执行器，它是智能抢课系统专门的选择器执行器。它除了能自动调用课程选择器外，还包含了一系列的数据库操作、邮件发送操作等等。  \n因此普通调用者请不要以它作为你的课程选择器执行器。  \n2. `SimpleSelectorPerformer`  \n简单选择器执行器，我们可以把它看作是一个“迷你智能抢课系统”，它除了能帮你调用选择器外，还能在调用期间不断输出选课日志，并且你只需要像你平常编写 Python 代码那样调用它就行了。  \n下面是一个简单的例子：  \n```python\nfrom snatcher.selector import SimpleSelectorPerformer, AsyncPESelector",
+        "score": 0.25
+      }
+    ],
+    "agent_answer": "根据知识库中的文档，课程选择器的类继承关系如下：\n\n### 类继承层次\n\n```\nBaseCourseSelector                  ← 基类（定义于 base.py）\n    │\n    └── AsyncCourseSelector         ← 异步课程选择器（派生类，定义于 async_selector.py）\n            │\n            ├── AsyncPCSelector     ← 异步公选课课程选择器\n            │\n            └── AsyncPESelector     ← 异步体育课课程选择器\n```\n\n- **`BaseCourseSelector`**：所有课程选择器类的父类，在 `snatcher/selector/base.py` 中定义，定义了课程选择器应有的属性和抽象方法。\n- **`AsyncCourseSelector`**：继承自 `BaseCourseSelector`，实现了异步选择器的公用方法，如 `select`、`set_jxb_ids` 等，目的是提高代码复用性。\n- **`AsyncPCSelector`** 和 **`AsyncPESelector`**：继承自 `AsyncCourseSelector`，分别专门实现公选课和体育课的选课逻辑。\n\n### 最终应该调用的选择器\n\n根据文档说明：\n\n> **外部调用者应该调用后两个选择器**，即 **`AsyncPCSelector`** 和 **`AsyncPESelector`**，因为只有它们才实现了完整的选课逻辑。它们的父类（`AsyncCourseSelector`）和祖先类（`BaseCourseSelector`）都是为了给子类提供抽象和封装，便于子类更好地实现具体逻辑。\n\n📄 参考来源：`snatcher/selector.md` — 异步选择器文件 章节"
+  },
+  {
+    "index": 13,
+    "question": "项目中有哪些实现并发的方案？最终选择了哪个框架？为什么？",
+    "ground_truth": "项目考虑了三种并发方案：多进程（适合 CPU 密集型，但选课是 IO 密集型，且受 GIL 限制）、多线程（适合 IO 密集型，但线程过多会导致上下文切换开销大）、协程（轻量级，用户态调度，切换快，一个协程就能实现并发）。最终基于协程选择了 arq 框架作为消息队列。arq 完全基于 Redis 实现消息队列，使用 Python 协程实现并发，支持定时任务、延时任务、任务重试等基本功能，且是轻量级框架，基于 Redis 的 zset 实现延时任务队列。项目曾排除 Celery（不支持异步函数）、Dramatiq（多线程实现）、Taskiq（使用复杂且缺少所需功能）。",
+    "ideal_contexts": [
+      "多进程：适合 CPU 密集型，但选课是 IO 密集型，且受 GIL 限制。",
+      "多线程：适合 IO 密集型任务，但创建过多线程会导致上下文切换耗时。",
+      "协程：轻量级线程，用户态调度，切换快，一个协程就能实现并发。",
+      "最终选择 arq：完全基于 Redis 实现消息队列，使用 Python 协程实现并发，支持定时/延时/重试任务。",
+      "arq 基于 Redis 的有序集合（zset）实现延时任务队列。",
+      "排除了 Celery（不支持异步函数）、Dramatiq（多线程实现）、Taskiq（使用复杂）。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/backend.md",
+        "section": "为什么选择它作为后端框架？",
+        "subsection": "",
+        "content": "- **Tornado**：  \n一个专注于异步协议的轻量级 Python 后端框架。  \n按理说它就是这个项目最合适的后端框架了，但是我为什么没有选择它呢？  \n这个原因可能有些荒唐但又显得不这么荒唐：因为我在写这个项目的时候还没有学过这个框架😂。  \n在此之前我刚好学会了 FastAPI 这个框架，但还没有一个具体项目的实践，因此就阴差阳错的选择了 FastAPI 作为本项目的后端框架。  \n当然，FastAPI 相较于 Tornado 来说还是有许多优点的：  \n1. **高性能**。  \n虽然该优点没有在这个项目中发挥出来，但是凭借这一点却使他在所有的 Python 后端框架中脱颖而出。  \n2. **丰富的社区资源**。  \n在 GitHub 中，它的关注量仅次于 Django 框架。这表明它有着丰富的社区资源，遇到问题也可以快速定位并解决。",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/backend.md",
+        "section": "为什么选择它作为后端框架？",
+        "subsection": "",
+        "content": "在 Python 中，有许多优秀的后端框架，它们包括但不限于以下：  \n- **Django**：  \n一个适合构建全栈项目的 Python 后端重量级框架。整个框架都围绕“开箱即用”而展开，里面包含了丰富的后端开发工具。它可以说是在 Python 中最流行、社区最大的后端框架。  \n但是正是由于它包含了太多这个项目不需要的工具，然而我的这个项目本身也不算太大，如果此时引入这个框架只会增加项目的复杂度，这使得整个项目也会成为“重量级”项目。  \n因此我排除了它。  \n- **Flask**：  \n一个轻量级的 Python 后端框架。  \n但是这个框架对于异步的支持度不大高，而抢课系统本身是基于异步模型展开的，所以我也将它给排除了。  \n- **Tornado**：  \n一个专注于异步协议的轻量级 Python 后端框架。",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/schedule.md",
+        "section": "并发框架的选择",
+        "subsection": "",
+        "content": "这个框架实现多任务的方式完全基于 Python 原生协程，按理说它是最适合本项目的。  \n但是，由于它使用起来较为复杂，并且不支持一些我想要的功能，所以我还是没有选择它。  \n4. ……  \n选择消息队列框架的过程是一个漫长且头疼的过程，并且在很多常见消息队列框架中都不支持协程函数。  \n但我还是在 GitHub 这个强大的开源社区中找到了我意向中的框架：[https://github.com/python-arq/arq](https://github.com/python-arq/arq)  \n这个框架完全基于 Redis 来实现消息队列，并且它完全使用 Python 协程来实现并发，还支持定时任务、延时任务、任务重试等消息队列基本功能，并且它是一个轻量级框架。  \n> [!note|label:延时任务队列]\n>",
+        "score": 0.25
+      },
+      {
+        "source": "snatcher/selector.md",
+        "section": "异步选择器文件",
+        "subsection": "",
+        "content": "打开这个文件，你将会看到 3 个非常重要的类：  \n1. `AsyncCourseSelector`  \n异步课程选择器，它是 `BaseCourseSelector` 类的一个派生类。它实现了异步选择器的公用方法，比如 `select`、`set_jxb_ids`等，这些方法的逻辑都是一成不变的，因此为了提高代码复用性，这里统一写在同一个父类中。  \n2. `AsyncPCSelector`  \n异步公选课课程选择器，专门实现公选课选课逻辑。  \n3. `AsyncPESelector`  \n异步体育课课程选择器，专门实现体育课选课逻辑。  \n因此在这么多的选择器中，外部调用者应该调用的是后两个选择器，因为只有它们才实现了完整的选课逻辑，它们的父类或祖先类都是为了让子类能更好的实现相应的逻辑而作出的抽象和封装。",
+        "score": 0.2
+      },
+      {
+        "source": "snatcher/schedule.md",
+        "section": "并发框架的选择",
+        "subsection": "",
+        "content": "我们可以将多个选课任务放到一个队列中，此时放入队列的人我们称它为**生产者**，既然有生产者，那么理应由**消费者**来消费这个任务。  \n因此并发模型我们可以选择**生产者-消费者**模式，那么这个队列我们称为**消息队列**。  \n在 Python 中，有许多优秀的消息队列框架：  \n1. **Celery**  \n在 Python 中使用最广泛的、社区最大的消息队列管理系统。  \n但是，它并不适合这个项目，因为它不支持执行异步函数，所以我果断放弃了它。  \n2. **Dramatiq**  \n与前者类似，而且它支持执行异步函数。但由于它实现多任务的方式是多线程，因此我放弃了它。  \n3. **Taskiq**  \n这个框架实现多任务的方式完全基于 Python 原生协程，按理说它是最适合本项目的。",
+        "score": 0.1667
+      }
+    ],
+    "agent_answer": "根据知识库文档，项目中主要考虑的并发方案及最终选择如下：\n\n---\n\n## 一、考虑的并发实现方案\n\n### 1. 多线程\n选课任务属于 **IO密集型任务**，多线程理论上是合适的。但当任务量很大（如100+选课任务）时，创建大量线程会导致上下文切换频繁，效率反而会下降。\n\n### 2. 协程（最终采用）\n协程是一种**轻量级线程**，其关键区别在于：\n- 线程处于**内核态**，由操作系统调度；协程处于**用户态**，完全由用户调度\n- 线程上下文切换较慢，协程上下文切换较快\n- 一个协程就能实现并发\n\n由于抢课系统本身就是**基于协程开发**的，最终决定以协程方式实现并发。\n\n---\n\n## 二、最终选择的框架\n\n涉及两个层面：\n\n### 1. 后端 Web 框架 → **FastAPI**\n\n| 框架 | 排除/选择原因 |\n|------|-------------|\n| **Django** | ❌ 太重，功能太多，增加项目复杂度 |\n| **Flask** | ❌ 对异步支持度不高，而系统基于异步模型 |\n| **Tornado** | ❌ 专注异步协议，最适合，但作者当时还没学😅 |\n| **FastAPI** | ✅ **最终选择**，原因：① **高性能**；② **丰富的社区资源**（GitHub关注量仅次于Django，遇到问题能快速定位解决） |\n\n> 文档来源：`snatcher/backend.md` - 为什么选择它作为后端框架？\n\n### 2. 消息队列/任务调度框架 → **arq**\n\n选课系统需要**同时处理多个选课任务**，内部使用了消息队列来实现并发。\n\n- 大多数常见消息队列框架都不支持协程函数\n- 最终选择了 **[arq](https://github.com/python-arq/arq)**，原因：\n  - ✅ 完全基于 **Redis** 实现消息队列\n  - ✅ 完全使用 **Python 原生协程** 实现并发\n  - ✅ 支持**定时任务、延时任务、任务重试**等消息队列基本功能\n  - ✅ **轻量级**框架\n\n> 文档来源：`snatcher/schedule.md` - 并发框架的选择\n\n---\n\n**总结一句话**：项目中最终采用 **协程并发模型**，后端选用 **FastAPI** 框架处理Web请求，任务调度选用 **arq** 框架（基于Redis + 协程）处理并发选课任务。"
+  },
+  {
+    "index": 14,
+    "question": "项目为什么将数据库从 MySQL 改为 MongoDB？",
+    "ground_truth": "有两个主要原因：(1) 项目数据量小——MySQL 适合大数据量、高并发的场景，但该项目不具备这些特点，使用 MySQL 会浪费资源；MongoDB 相对更轻量，更符合项目特点；(2) 不需要维护 SQL 语句——使用 MySQL 要么引入 ORM 框架增加复杂度，要么手动维护 SQL 语句面临 SQL 注入风险；MongoDB 操作更简洁，不需要这些复杂操作。项目对 MongoDB 进行了二次封装（在 /snatcher/storage/mongo 下），封装灵感来源于 Django 框架的 connections 和 caches 设计模式。",
+    "ideal_contexts": [
+      "项目早期使用 MySQL，后改用 MongoDB。原因一：项目数据量小，MySQL 适合大数据量场景，MongoDB 更轻量。",
+      "原因二：不需要维护 SQL 语句。使用 MySQL 要么引入 ORM 框架增加复杂度，要么手动维护 SQL 面临 SQL 注入风险。",
+      "MongoDB 操作更简洁，封装灵感来源于 Django 的 connections 和 caches 设计模式。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/database.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 数据存储之数据库模块  \n*数据库保存了网站的所有数据，因此它是一个系统中最机密的一部分。*  \n---  \n这个项目使用的数据库是 `MongoDB`。但是项目的早期版本，使用的数据库是 `MySQL`。  \n更改数据库的原因有以下几点：  \n1. **项目数据量小**  \n这点我觉得是最重要的一点。首先 `MySQL` 本身就适合那些大数据量、高并发等场景。但是这个项目本身就不具备那些特点，所以我觉得使用 `MySQL` 会浪费掉部分资源。  \n相反 `MongoDB` 即使也支持海量存储、高并发场景，但相对于 `MySQL` 来说它是更轻量的，这非常符合这个项目的特点。  \n2. **不需要维护 `SQL` 语句**",
+        "score": 1.0
+      },
+      {
+        "source": "snatcher/configuration.md",
+        "section": "模块介绍",
+        "subsection": "",
+        "content": "配置当前环境是否是开发环境。默认为 `True`。  \n这个选项貌似只在数据库连接那里有效。如果这个值为真，那么在连接数据库时就会读取根目录下的 `mongodb_dev` 文件；否则会读取 `mongodb` 文件。  \n这个配置是在本地开发的时候为了不将数据库配置泄露出去而新增的配置。  \n**在你使用这个项目的时候应该将它的值改为 `False`。**  \n2. `DATABASES`  \n数据库连接配置项。  \n当前的配置主要是 `Redis` 和 `MongoDB`。其中后者的配置会动态读取，当然你也可以直接在这个配置中编写连接配置。  \n3. `TIMEOUT`  \n全局选课超时时间，默认为 2 个小时。  \n课程选择器发送的每一个请求都是带上这个超时时间。  \n4. `SETTING_SESSION_TIMEOUT`  \n登录超时时间，默认为 1 个小时。",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/database.md",
+        "section": "",
+        "subsection": "",
+        "content": ">\n> 因此这是网站开发者需要特别考虑的问题！  \n但是 `MongoDB` 却不需要这些复杂的操作，尽管它也有可能被注入攻击，但它的概率相对于手动维护 `SQL` 来说是非常小的。  \n综合上面两点，我最终将数据库换成了 `MongoDB` 数据库。  \n关于操作 MongoDB 数据库的代码都在 `./snatcher/storage/mongo` 下。  \n其中里面包含了两个 Python 文件：  \n1. `base.py`  \n二次封装 MongoDB 库，使得操作数据库变得更加简单。  \n代码经过封装后，可以无需考虑连接层的代码，我们可以直接关注集合（数据表）的操作。  \n这是一个简单的例子：  \n```python\nfrom snatcher.storage import collections",
+        "score": 0.25
+      },
+      {
+        "source": "snatcher/database.md",
+        "section": "",
+        "subsection": "",
+        "content": "user_collection = collections['user']\nuser_collection.create()\n```  \n`collections` 将所有的集合都指向同一个对象，通过简单的中括号表达式就可以获取相应集合对象，通过这个对象就可以对集合进行增删改查等操作……  \n> [!tip|label:灵感来源]\n>\n> 我为什么会想出这样的封装方式呢？\n>\n> 如果你学过 Django 框架，那么你应该知道 Django 框架操作数据库主要使用 ORM 来操作。\n>\n> 但是，在一些极端情况下，通过 ORM 操作数据库的效率是非常低下，因此我们不得不想方设法通过 SQL 语句的形式去操作数据库。\n>\n> 那么在 Django 中同样提供了一种直接操作数据库的办法。例如：\n>\n> ```python",
+        "score": 0.2
+      },
+      {
+        "source": "snatcher/backend.md",
+        "section": "为什么选择它作为后端框架？",
+        "subsection": "",
+        "content": "3. **标准的 Python 类型提示**。  \n这点在任何一个项目中都是非常重要的，即使 Python 是一门强类型语言，但是你在声明一个变量的时候不需要明确指定变量的类型。  \n这会导致什么问题呢？首先我们来看下面这个简单的例子：  \n```python\ndef add(a, b):\nreturn a + b\n```  \n它定义了一个非常简单的函数，一般程序员都会以为这个函数实现了两个整数相加并返回结果。  \n但是，在 Python 中，支持加号运算符的数据类型可不只有整型，它还包括：列表、字符串等等。  \n所以这里就会对这个函数产生一个疑惑：这个函数的参数我到底该传入什么样的类型呢？函数的返回值又应该是个什么类型呢？  \n> [!tip]\n>\n> 当然，你也可以编写函数说明文档来表明这个函数的意图。但我们现在有更简单的办法来解决这个问题。",
+        "score": 0.1667
+      }
+    ],
+    "agent_answer": "根据项目文档（`snatcher/database.md`），将数据库从 **MySQL 改为 MongoDB** 主要基于以下两个原因：\n\n### 1️⃣ 项目数据量小，MySQL 过于\"重\"\n\n> **这是最核心的一点。** MySQL 本身是为大数据量、高并发等场景设计的，但该项目**并不具备这些特点**。使用 MySQL 反而会浪费部分系统资源。\n>\n> 而 MongoDB 虽然也支持海量存储和高并发，但相比 MySQL **更加轻量**，非常符合这个项目的特点。\n\n### 2️⃣ 不需要手动维护 SQL 语句\n\n> 使用 MySQL 需要手动编写和维护 SQL 语句，存在 **SQL 注入攻击**的风险，需要开发者额外花精力防范。\n>\n> 而 MongoDB 的操作方式更简单，**无需维护复杂的 SQL 语句**，被注入攻击的概率也相对小得多，安全性更高。\n\n---\n\n**总结：** 项目规模较小，用 MySQL 显得\"杀鸡用牛刀\"，而 MongoDB 更轻量、操作更简便，因此最终选择了切换。"
+  },
+  {
+    "index": 15,
+    "question": "会话管理模块提供了哪些核心函数？如何使用它们来登录和获取会话？",
+    "ground_truth": "会话管理模块提供两个核心函数：(1) get_session_manager——以 LRU 缓存形式获取学号对应的SessionManager，内部管理 Redis 连接池，提供 Cookie 的增删改查和 xkkz_id 管理；(2) async_check_and_set_session——检查并设置会话，如果缓存中没有当前学号的有效 Cookie 则模拟登录并保存，否则直接返回。登录成功返回 1，失败返回 -1。使用方式：asyncio.run(async_check_and_set_session(username, password))。SessionManager 使用了代理模式，底层操作 Redis。get_session_manager 使用 lru_cache 装饰器避免重复创建连接池，提高资源利用率。",
+    "ideal_contexts": [
+      "get_session_manager：以 LRU 缓存的形式获取学号对应的会话管理器。",
+      "async_check_and_set_session：检查并设置会话。缓存中没有有效 Cookie 时模拟登录并保存，有则直接返回。登录成功返回 1，失败返回 -1。",
+      "SessionManager 使用了代理模式，底层操作 Redis。",
+      "asyncio.run(async_check_and_set_session(username, password))"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/session.md",
+        "section": "",
+        "subsection": "",
+        "content": "coroutine = async_check_and_set_session(username, password)\nres = asyncio.run(coroutine)\nif res == -1:\nprint('登录失败')\n```  \n以上就是整个会话模块的函数和类了，但最终你应该调用的函数只有两个：  \n1. `get_session_manager`\n2. `async_check_and_set_session`  \n仅仅通过这两个函数你就可以很方便的操作用户的会话信息了。",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/core.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 系统核心模块介绍  \n*核心模块是整个系统最为重要的部分，它保证了整个智能抢课系统的稳定运行。*  \n---  \n在前面的章节中我粗略的介绍了这个系统的前端和后端部分。但是由于它们都是这个系统的次要部分，因此我没有详细地对它们的设计逐步展开介绍。  \n但是，接下来的核心模块部分，是这个系统中最最重要的部分。所以我将以模块的形式来一一介绍它们。  \n现在，我将核心系统分为以下几个部分：  \n1. **课程选择器模块**\n2. **数据存储模块之数据库模块**\n3. **数据存储之缓存模块**\n4. **会话管理模块**\n5. **任务调度模块**\n6. **邮件发送模块**\n7. **配置模块**\n8. **其他模块**  \n可以用下图来表示它们之间的关系：  \n![](images/sys.png)  \n下面，让我来一一介绍它们……",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/session.md",
+        "section": "",
+        "subsection": "",
+        "content": "以 LRU 缓存的形式获取一个学号对应的会话管理器。  \n你应该使用这个函数来获取一个学号对应的会话管理器，因为这个函数被一个 `lru_cache` 的装饰器装饰。  \n由于创建一个会话管理器对象就相当于创建了一个 `Redis` 连接池。而在课程选择器内部也会创建这个管理器类。  \n所以为了提高资源的利用率，我不希望每次要获取一个学号对应的会话信息时都创建一个连接池，因此我使用一个带有缓存特性的函数来代理创建这个管理器类。  \n这样就可以提高资源的利用率了。  \n> [!tip|label:lru_cache装饰器]\n>\n> 这个装饰器会让这个函数变得有缓存特性。\n>",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/session.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 会话管理模块  \n*会话模块也是缓存的一部分，在这个模块中定义了一系列用于操作用户登录信息的工具。*  \n---  \n整个模块位于：`/snatcher/session.py` 下。  \n下面是每个函数或类的解释：  \n- `SessionManager`  \n会话管理器，管理一个学号对应的所有会话信息。同时它还额外管理每个年级的 `xkkz_id`。  \n这个类也使用了 `代理模式` 来实现，内部的所有操作实际上是对 `Redis` 的操作。  \n下面是对这个类的方法的解释：  \n1. `get`  \n获取一个指定主机号的 `Cookie`，返回一个字符串。  \n2. `save_cookie`  \n保存指定主机号的 `Cookie`。  \n3. `save_xkkz_id`  \n保存该学号对应年级对应课程类型的 `xkkz_id`。  \n4. `get_xkkz_id`",
+        "score": 0.25
+      },
+      {
+        "source": "snatcher/session.md",
+        "section": "",
+        "subsection": "",
+        "content": ">\n> 这个装饰器会让这个函数变得有缓存特性。\n>\n> 换句话说，如果你第一次传给这个函数的参数是 1，那么函数会执行完内部的所有逻辑，此时如果函数有返回值，那么这个装饰器会将这个返回值保存在内存中；下次你再传入 1 调用这个函数的时候，这个装饰器会在内存中直接将上次的返回值返回，从而提高函数的执行速度。\n>\n> 不要小看这个装饰器，这在很多情况下都是非常有用的！例如实现**斐波那契数列**算法……  \n- `AsyncSessionSetter`  \n异步会话设置器，模拟用户登录并获取登录后的 Cookie。  \n它是一个异步上下文管理器，所以你创建它的对象也需要像这样：  \n```python\nasync def main():\nasync with AsyncSessionSetter(username, password) as setter:\n# 你的逻辑\n...\n```",
+        "score": 0.2
+      }
+    ],
+    "agent_answer": "根据检索到的文档，以下是为您整理的回答：\n\n---\n\n## 会话管理模块的核心函数\n\n会话管理模块位于 `/snatcher/session.py` 下，包含以下核心类和函数：\n\n### 1. `SessionManager`（类）\n会话管理器，管理一个学号对应的所有会话信息，同时管理每个年级的 `xkkz_id`。内部操作基于 Redis，使用了**代理模式**。\n\n核心方法：\n| 方法 | 说明 |\n|------|------|\n| `get(host)` | 获取指定主机号的 `Cookie`，返回字符串 |\n| `save_cookie(host, cookie)` | 保存指定主机号的 `Cookie` |\n| `save_xkkz_id(...)` | 保存该学号对应年级对应课程类型的 `xkkz_id` |\n| `get_xkkz_id(...)` | 获取 `xkkz_id` |\n\n### 2. `AsyncSessionSetter`（类）\n**异步会话设置器**，模拟用户登录并获取登录后的 `Cookie`。它是一个**异步上下文管理器**，使用方式如下：\n\n```python\nasync with AsyncSessionSetter(username, password) as setter:\n    # 你的逻辑\n    ...\n```\n\n### 3. `async_set_session(username, password)`（协程函数）\n设置会话（模拟登录）。将 `AsyncSessionSetter` 的创建逻辑封装成一个函数，方便调用：\n\n```python\nimport asyncio\nfrom snatcher.session import async_set_session\n\nasyncio.run(async_set_session(username, password))\n```\n\n### 4. `async_check_and_set_session(username, password)`（协程函数）\n对 `async_set_session` 的**二次封装**，增加了检查功能：\n- **缓存中无有效 Cookie** → 尝试模拟登录并保存 Cookie\n- **缓存中存在有效 Cookie** → 直接返回\n\n登录成功返回 **`1`**，失败返回 **`-1`**。\n\n```python\nimport asyncio\nfrom snatcher.session import async_check_and_set_session\n\ncoroutine = async_check_and_set_session(username, password)\nres = asyncio.run(coroutine)\nif res == -1:\n    print('登录失败')\n```\n\n### 5. `get_session_manager`（函数）\n以 **LRU 缓存**的形式获取一个学号对应的会话管理器。由于创建 `SessionManager` 对象相当于创建一个 Redis 连接池，使用该函数可以避免重复创建，提高资源利用率。\n\n---\n\n## 如何登录和获取会话？\n\n文档明确指出，**最终你只需要使用以下两个函数即可**：\n\n### ✅ 第一步：登录（检查并设置会话）\n```python\nimport asyncio\nfrom snatcher.session import async_check_and_set_session\n\nresult = asyncio.run(async_check_and_set_session(\"你的学号\", \"你的密码\"))\nif result == 1:\n    print(\"登录成功\")\nelse:\n    print(\"登录失败\")\n```\n\n### ✅ 第二步：获取会话管理器\n```python\nfrom snatcher.session import get_session_manager\n\nmanager = get_session_manager(\"你的学号\")\n# 获取指定主机的 Cookie\ncookie = manager.get(\"主机号\")\n# 保存 Cookie\nmanager.save_cookie(\"主机号\", \"cookie字符串\")\n```\n\n> **引用来源**：文档 `snatcher/session.md` 中的\"会话管理模块\"章节及函数说明。"
+  },
+  {
+    "index": 16,
+    "question": "邮件模块包含哪些邮件发送器？它们之间的继承关系和使用场景是什么？",
+    "ground_truth": "邮件发送器的继承关系：AbstractEmailSender（抽象基类，定义 send 抽象方法）→ SMTPEmailSender（基于 SMTP 协议）→ 派生出 HTMLEmailSender（发送 HTML 类型邮件）和 TextEmailSender（发送文本类型邮件）；AbstractEmailSender 也派生出 TencentCloudEmailSender（使用腾讯云服务发送邮件）。使用场景：选课失败的邮件使用 TextEmailSender（文本类型）；选课成功的邮件，若配置了腾讯云则使用 TencentCloudEmailSender，否则使用 HTMLEmailSender。系统使用工厂方法模式（EmailSenderFactory）和统一的 send_email 函数来获取合适的发送器。",
+    "ideal_contexts": [
+      "AbstractEmailSender（抽象基类）→ SMTPEmailSender → HTMLEmailSender 和 TextEmailSender",
+      "AbstractEmailSender → TencentCloudEmailSender",
+      "选课失败使用 TextEmailSender（文本类型），选课成功使用 TencentCloudEmailSender（若配置）或 HTMLEmailSender",
+      "使用工厂方法模式（EmailSenderFactory）和统一的 send_email 函数。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/mail.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 邮件发送模块  \n*该模块用于通知用户选课成功、将选课失败的信息告知管理员。*  \n---  \n其实在 Python 的标准库中自带了邮件发送模块，只不过在这个项目中进一步对这些模块做了一个封装。  \n邮件发送模块位于：`/snatcher/postman/mail.py` 下。  \n该模块基于邮件发送器（类）展开，这是各个邮件发送器之间的继承关系：  \n![](images/email-sender.png)  \n- **AbstractEmailSender**  \n抽象邮件发送器，这个类只定义了一个抽象方法 `send`，这表示所有的邮件发送器都要继承它，并实现 `send` 方法。  \n- **SMTPEmailSender**  \n基于 `SMTP` 协议的邮件发送器，所有发送的邮件都是经过 `SMTP` 服务器的。  \n- **HTMLEmailSender**",
+        "score": 0.75
+      },
+      {
+        "source": "snatcher/mail.md",
+        "section": "",
+        "subsection": "",
+        "content": "- **HTMLEmailSender**  \n是 `SMTP` 邮件发送器的子类，专门发送 `HTML` 类型的邮件。  \n- **TextEmailSender**  \n是 `SMTP` 邮件发送器的子类，专门发送 `Text` 类型的邮件。  \n- **TencentCloudEmailSender**  \n直接继承于抽象邮件发送器，它表示所有的邮件发送都是由腾讯云来发送。  \n我选择使用腾讯云服务来发送邮件的原因是：如果直接使用 `SMTP` 来发送邮件，那么这会存在一个限流问题，这导致之前在测试的时候，很多邮件都发送失败了。  \n尽管使用腾讯云服务来发送邮件也会有一个限流，但是这相对于使用 `SMTP` 来发送邮件已经很好了。  \n> [!tip|label:这些邮件发送器都在什么时候使用呢？]\n>\n> - 如果是选课失败的邮件，那么都会使用文本类型的邮件发送器发送邮件。",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/mail.md",
+        "section": "",
+        "subsection": "",
+        "content": ">\n> - 如果是选课失败的邮件，那么都会使用文本类型的邮件发送器发送邮件。\n> - 如果是选课成功的邮件，并且在配置文件中指定了使用腾讯云来发送邮件，那么就会使用腾讯云邮件发送器；否则使用超文本标记语言邮件发送器。  \n针对这么多情况的选择，这里使用了设计模式中的`工厂方法模式`来获取符合条件的邮件发送器。  \n它位于该模块下的 `EmailSenderFactory` 类。  \n为了让其他模块更方便地使用邮件发送功能，这里统一定义了一个函数：`send_email`。  \n这个函数可以根据传入的参数来自动判断应该调用的邮件发送器来发送邮件。  \n因此你不需要自己调用那些邮件发送器，你只需要调用这个函数就可以很方便地发送邮件了。",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/core.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 系统核心模块介绍  \n*核心模块是整个系统最为重要的部分，它保证了整个智能抢课系统的稳定运行。*  \n---  \n在前面的章节中我粗略的介绍了这个系统的前端和后端部分。但是由于它们都是这个系统的次要部分，因此我没有详细地对它们的设计逐步展开介绍。  \n但是，接下来的核心模块部分，是这个系统中最最重要的部分。所以我将以模块的形式来一一介绍它们。  \n现在，我将核心系统分为以下几个部分：  \n1. **课程选择器模块**\n2. **数据存储模块之数据库模块**\n3. **数据存储之缓存模块**\n4. **会话管理模块**\n5. **任务调度模块**\n6. **邮件发送模块**\n7. **配置模块**\n8. **其他模块**  \n可以用下图来表示它们之间的关系：  \n![](images/sys.png)  \n下面，让我来一一介绍它们……",
+        "score": 0.2
+      },
+      {
+        "source": "snatcher/configuration.md",
+        "section": "模块介绍",
+        "subsection": "",
+        "content": "这个配置主要是在数据库中要到，不是选课参数。  \n8. `START_TIME`  \n开始选课时间。  \n按照时机的开始选课时间填写即可。  \n9. `EMAIL_CONFIG`  \nSMTP 邮件发送配置。  \n这个配置的默认值是我的，因此你需要将这些配置更改为你自己的邮件发送配置。这个配置需要到对应的邮件服务中开通。  \n10. `USE_TENCENT_CLOUD_MAIL_SERVICE`  \n是否使用腾讯云服务来发送选课成功邮件。  \n11. `PORTS`  \n模拟登录时使用到的所有主机号。  \n12. `SYSTEM_OPENING_TIME`  \n系统开放时间。  \n这个主要是限制后端提交预约抢课的时间，如果没到达这个时间，那么后端将不会发送选课任务。  \n13. `ARQ_REDIS_SETTINGS`  \n消息队列的 `Redis` 配置。",
+        "score": 0.1667
+      }
+    ],
+    "agent_answer": "## 邮件模块包含的邮件发送器\n\n根据文档 **`snatcher/mail.md`** 的介绍，邮件模块共包含 **4 个邮件发送器**，它们的继承关系如下：\n\n```\nAbstractEmailSender（抽象邮件发送器）\n├── SMTPEmailSender（SMTP 邮件发送器）\n│   ├── HTMLEmailSender（HTML 邮件发送器）\n│   └── TextEmailSender（文本邮件发送器）\n└── TencentCloudEmailSender（腾讯云邮件发送器）\n```\n\n---\n\n### 各发送器详解\n\n#### 1️⃣ AbstractEmailSender（抽象邮件发送器）\n- **地位**：所有邮件发送器的基类\n- **职责**：仅定义了一个抽象方法 `send`，强制所有子类实现该方法\n\n#### 2️⃣ SMTPEmailSender（SMTP 邮件发送器）\n- **继承**：直接继承自 `AbstractEmailSender`\n- **特点**：基于 `SMTP` 协议，所有发出的邮件都经过 SMTP 服务器\n- **注意**：存在 **限流问题**，批量发送时容易导致邮件发送失败\n\n#### 3️⃣ HTMLEmailSender（HTML 邮件发送器）\n- **继承**：`SMTPEmailSender` 的子类\n- **用途**：专门发送 **HTML 格式** 的邮件\n\n#### 4️⃣ TextEmailSender（文本邮件发送器）\n- **继承**：`SMTPEmailSender` 的子类\n- **用途**：专门发送 **纯文本格式** 的邮件\n\n#### 5️⃣ TencentCloudEmailSender（腾讯云邮件发送器）\n- **继承**：直接继承自 `AbstractEmailSender`\n- **特点**：使用腾讯云邮件服务发送，虽然也存在限流，但相比 SMTP 方式好很多\n\n---\n\n### 使用场景\n\n| 场景 | 使用的发送器 |\n|------|-------------|\n| **选课失败通知** | 使用 **`TextEmailSender`**（文本邮件发送器）发送纯文本邮件 |\n| **选课成功通知（配置了腾讯云）** | 使用 **`TencentCloudEmailSender`**（腾讯云邮件发送器） |\n| **选课成功通知（未配置腾讯云）** | 使用 **`HTMLEmailSender`**（HTML 邮件发送器） |\n\n> 📌 **补充说明**：模块内部使用了**工厂方法模式**（`EmailSenderFactory` 类）来根据条件自动选择对应的邮件发送器。对外统一提供了 `send_email` 函数，其他模块无需关心底层具体使用哪个发送器，直接调用该函数即可。"
+  },
+  {
+    "index": 17,
+    "question": "缓存模块如何实现选课日志的发布和记录？日志消息的格式是怎样的？",
+    "ground_truth": "缓存模块基于 Redis 实现，关键组件包括：(1) AsyncRuntimeLogger——异步运行时日志记录器，使用代理模式，底层操作 Redis 哈希数据类型，设计为异步上下文管理器；(2) publish_message——异步装饰器，在日志频道中发布消息，适用于 AsyncRuntimeLogger 的特定方法；(3) logging——装饰器，用于课程选择器的 set_kch_id、set_xkkz_id、set_jxb_ids、select_course 方法，通过方法名自动判断日志类型，实现选择器逻辑和日志逻辑的解耦。日志消息格式：'username-course_name|message_name|message'，由学号和课程名构成的日志键、消息名称、消息详细内容三部分组成。",
+    "ideal_contexts": [
+      "AsyncRuntimeLogger：异步运行时日志记录器，使用代理模式，底层操作 Redis 哈希数据类型。",
+      "publish_message：异步装饰器，在消息频道中发布日志消息。",
+      "logging 装饰器：用于 set_kch_id、set_xkkz_id、set_jxb_ids、select_course 方法，自动判断日志类型。",
+      "消息格式：'username-course_name|message_name|message'"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/cache.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 数据存储之缓存模块  \n*缓存中保存了选课日志、登录信息等重要数据，所以它是这个系统不可缺少的一部分。*  \n---  \n缓存模块位于：`/snatcher/storage/cache.py` 下  \n这个模块下有这么几个函数或类：  \n- `publish_message`  \n在消息频道中发布一条日志消息。  \n每一条消息的格式都是像 `username-course_name|message_name|message` 这样的字符串。  \n其中 `username-course_name` 是由学号和课程名构成日志键，`message_name` 是消息名称，`message` 表示消息详细内容。它们三者组成了一条完整的日志消息。  \n它是一个异步装饰器，它只适合 `AsyncRuntimeLogger` 的特定方法，因此如果装饰到别的函数上面是会报错的。",
+        "score": 1.0
+      },
+      {
+        "source": "snatcher/core.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 系统核心模块介绍  \n*核心模块是整个系统最为重要的部分，它保证了整个智能抢课系统的稳定运行。*  \n---  \n在前面的章节中我粗略的介绍了这个系统的前端和后端部分。但是由于它们都是这个系统的次要部分，因此我没有详细地对它们的设计逐步展开介绍。  \n但是，接下来的核心模块部分，是这个系统中最最重要的部分。所以我将以模块的形式来一一介绍它们。  \n现在，我将核心系统分为以下几个部分：  \n1. **课程选择器模块**\n2. **数据存储模块之数据库模块**\n3. **数据存储之缓存模块**\n4. **会话管理模块**\n5. **任务调度模块**\n6. **邮件发送模块**\n7. **配置模块**\n8. **其他模块**  \n可以用下图来表示它们之间的关系：  \n![](images/sys.png)  \n下面，让我来一一介绍它们……",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/cache.md",
+        "section": "",
+        "subsection": "",
+        "content": "asyncio.run(main())\n```  \n其中有两个需要注意的方法：`set`、`retry`。这两个方法被调用时都将向日志频道中发布一条消息，因为它们都被`publish_message` 函数装饰了。  \n- `logging`  \n记录课程选择器中的选课日志。  \n在没有这个装饰器之前，课程选择器都是自己记录日志的。但是有了这个装饰器后，课程选择器可以在特定的方法上加上这个装饰器，这样进一步将课程选择器逻辑和日志逻辑**解耦**，从而达到**单一职责原则**的目的。  \n这个特定的方法必须是：`set_kch_id`、`set_xkkz_id`、`set_jxb_ids`、`select_course`。  \n装饰器内部会通过方法名来自动判断出日志的类型，因此这是一个非常方便的日志记录操作。  \n- `runtime_logs_generator`",
+        "score": 0.25
+      },
+      {
+        "source": "snatcher/cache.md",
+        "section": "",
+        "subsection": "",
+        "content": "`index` 表示当前课程的优先级，每一个用户可能会提交多个意向课程，`index` 的数值越小，选择这门课程的优先级越高。  \n`fuel_id` 表示提交当前课程使用的 抢课码ID，因为用户查询选课进度需要用到抢课码进行查询。  \n下面我来简单叙述一下这个函数的运行过程：  \n1. 首先函数通过 抢课码ID 来过滤出这个抢课码对应的所有日志。  \n2. 接着以日志中的 `index` 字段进行排序，从而得到正确的日志顺序。  \n3. 此时我们已经得到了正确的日志序列。  \n4. 由于每一个日志可能包含错误信息和重试信息，因此需要将这些信息进一步整理。  \n5. 进入循环。  \n6. 每一条日志会返回最后一次尝试的日志以及重试次数。  \n7. 循环上述操作，直到清洗完所有日志。  \n8. 返回一个字典类型，类似于以下：  \n```python\nuser_log = {",
+        "score": 0.2
+      },
+      {
+        "source": "snatcher/introduce.md",
+        "section": "它有什么特点？",
+        "subsection": "",
+        "content": "2. **支持提前提交选课任务**  \n即使还没到选课时间，你也可以在系统上提交选课任务，因为系统内部会自动判断当前时间是否是选课时间。  \n3. **支持查询选课进度**  \n当你在系统上提交了你的选课申请，那么当选课开始时，系统内部会记录每一步选课动作，你可以通过系统提供的接口来查询你的选课进度。  \n4. **后台可监听所有选课任务进度**  \n这个功能对于网站管理员来说是尤为重要的，系统管理员可以以一个上帝视角去实时查看所有的选课进度。  \n5. **显示课程的已选择人数**  \n如果你急切地想看到意向课程的选课情况，并且又进不去教务系统。那么不用担心，系统内部会每隔一段时间从教务系统中获取课程的已选择人数，并展示到系统的相关页面。  \n6. **不使用账号密码也能选课**  \n如果你不想泄露你的密码，那么抢课系统也提供了一个不用密码的抢课渠道。",
+        "score": 0.1667
+      }
+    ],
+    "agent_answer": "根据知识库中的文档，以下是关于缓存模块实现选课日志发布和记录的详细说明。\n\n---\n\n## 一、选课日志的发布与记录\n\n### 1. 发布机制 — `publish_message`\n\n缓存模块位于 `/snatcher/storage/cache.py`，其中核心函数是 **`publish_message`**。\n\n- 它是一个**异步装饰器**，专门用于 `AsyncRuntimeLogger` 的特定方法。\n- 当被装饰的方法（如 `set`、`retry` 等）被调用时，会自动向**消息频道**中发布一条日志消息。\n- 如果装饰到其他不相干的函数上，会报错。\n\n### 2. 记录机制 — `logging`\n\n`logging` 是一个装饰器，用于记录课程选择器中的选课日志。它的设计特点：\n\n- **解耦设计**：将课程选择器的逻辑与日志记录逻辑解耦，符合**单一职责原则**。\n- 课程选择器只需在特定的方法上加上该装饰器，即可自动记录日志。\n- 支持的方法包括：`set_kch_id`、`set_xkkz_id`、`set_jxb_ids`、`select_course`。\n- 装饰器内部会根据**方法名自动判断日志类型**，使用非常方便。\n\n---\n\n## 二、日志消息的格式\n\n### 格式1：消息频道中发布的日志消息\n\n由 `publish_message` 发布，格式为字符串：\n\n```\nusername-course_name|message_name|message\n```\n\n| 字段 | 说明 |\n|------|------|\n| `username-course_name` | **日志键**，由学号和课程名构成 |\n| `message_name` | 消息名称 |\n| `message` | 消息详细内容 |\n\n### 格式2：运行时日志生成器输出的日志\n\n由 `runtime_logs_generator` 生成，格式为字典：\n\n```python\n{\n    'course_name': '',       # 课程名称\n    'username': '',          # 学号\n    '1': '',                 # 步骤 1\n    '2': '',                 # 步骤 2\n    '3': '',                 # 步骤 3\n    '4': '',                 # 步骤 4\n    'retry': 'retry_times',  # 重试次数\n    'error': 'runtime error' # 运行时错误信息\n}\n```\n\n### 格式3：选课进度导出格式\n\n对于特定的选课进度导出（`export_progress`），返回的字典格式为：\n\n```python\nuser_log = {\n    'username': '2204425143',                # 学号\n    'goals': ['中医药膳与食疗养生', '西方礼仪', '花卉赏析'],  # 按优先级排序的课程列表\n    'progress': [[2, 3], [2, 3], [3, 1]]      # 子列表：[最后一次进度, 尝试次数]\n}\n```\n\n> 以上内容均来源于文档 **`snatcher/cache.md`** 中的\"数据存储之缓存模块\"章节。"
+  },
+  {
+    "index": 18,
+    "question": "智能抢课系统支持哪几种登录方式？抢课码有什么作用？",
+    "ground_truth": "系统支持两种登录方式：(1) 账号密码登录——用户输入学号和密码，系统自动模拟登录并保存 Cookie，选课前可提前调用 async_check_and_set_session 预登录，选课时跳过登录步骤；(2) 抢课码登录——联系管理员获取抢课码，不使用账号密码也能完成选课。抢课码的作用：作为查询选课进度的凭证。在缓存模块的 export_progress 函数中，通过抢课码 ID（fuel_id）过滤出该码对应的所有日志，排序后整理出用户的选课进度。每条日志记录包括最后一次尝试的进度和重试次数。",
+    "ideal_contexts": [
+      "登录方式：使用账号密码登录、使用抢课码（联系管理员获取）登录。",
+      "不使用账号密码也能选课。",
+      "抢课码 ID（fuel_id）用于在选课日志中标识用户，通过 export_progress 函数查询选课进度。",
+      "export_progress：通过 fuel_id 过滤日志，按 index 排序，整理出用户的选课进度（最后一次进度和尝试次数）。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/introduce.md",
+        "section": "它有什么特点？",
+        "subsection": "",
+        "content": "1. **自动获取选课参数**  \n在上面我已经提到过了，你只需要传入账号密码、意向课程就行了。剩下的工作选课系统会自己帮你完成。  \n2. **支持多人选课**  \n内部使用了`消息队列`来**同时**处理多个选课任务。**所以你完全不需要担心需要排队选课的问题**。  \n3. **内部自动处理异常**  \n这是在代码层面的工作，这里不多介绍。  \n上面 3 点是普通代码选课所面临的缺陷，智能抢课系统都逐个解决了。  \n那么下面几点是选课系统额外的亮点：  \n1. **易于普通用户使用的操作界面**  \n这点是最重要的。我曾以 `正方` 、 `抢课` 、 `选课` 等等的关键字在 `GitHub` 上检索相关信息。但最终翻遍了整个 `GitHub`，都没有找到一个易于普通用户使用的抢课系统。  \n2. **支持提前提交选课任务**",
+        "score": 0.6667
+      },
+      {
+        "source": "snatcher/introduce.md",
+        "section": "它有什么特点？",
+        "subsection": "",
+        "content": "2. **支持提前提交选课任务**  \n即使还没到选课时间，你也可以在系统上提交选课任务，因为系统内部会自动判断当前时间是否是选课时间。  \n3. **支持查询选课进度**  \n当你在系统上提交了你的选课申请，那么当选课开始时，系统内部会记录每一步选课动作，你可以通过系统提供的接口来查询你的选课进度。  \n4. **后台可监听所有选课任务进度**  \n这个功能对于网站管理员来说是尤为重要的，系统管理员可以以一个上帝视角去实时查看所有的选课进度。  \n5. **显示课程的已选择人数**  \n如果你急切地想看到意向课程的选课情况，并且又进不去教务系统。那么不用担心，系统内部会每隔一段时间从教务系统中获取课程的已选择人数，并展示到系统的相关页面。  \n6. **不使用账号密码也能选课**  \n如果你不想泄露你的密码，那么抢课系统也提供了一个不用密码的抢课渠道。",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/introduce.md",
+        "section": "",
+        "subsection": "",
+        "content": "# 智能抢课系统  \n*代码仓库：[https://github.com/thcpdd/snatcher](https://github.com/thcpdd/snatcher)。不要忘记⭐噢。*  \n---",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/introduce.md",
+        "section": "普通用户如何使用？",
+        "subsection": "",
+        "content": "1. **先进入系统的选课界面**  \n![](images/s1.png)  \n2. **找到相应课程并点击添加**  \n![](images/s2.png)  \n> 可以添加多个课程，系统会按照添加顺序来一一选课。  \n3. **点击下方确认按钮**  \n![](images/s3.png)  \n4. **输入相关信息**  \n![](images/s4.png)  \n> [!tip|label:说明]\n>\n> **登录方式**：如果你想使用第二种方式，那建议你先提前联系网站管理员。\n>\n> **抢课码**：联系管理员获取。  \n5. **提交**  \n确认信息无误后即可提交。",
+        "score": 0.35
+      },
+      {
+        "source": "snatcher/cache.md",
+        "section": "",
+        "subsection": "",
+        "content": "`index` 表示当前课程的优先级，每一个用户可能会提交多个意向课程，`index` 的数值越小，选择这门课程的优先级越高。  \n`fuel_id` 表示提交当前课程使用的 抢课码ID，因为用户查询选课进度需要用到抢课码进行查询。  \n下面我来简单叙述一下这个函数的运行过程：  \n1. 首先函数通过 抢课码ID 来过滤出这个抢课码对应的所有日志。  \n2. 接着以日志中的 `index` 字段进行排序，从而得到正确的日志顺序。  \n3. 此时我们已经得到了正确的日志序列。  \n4. 由于每一个日志可能包含错误信息和重试信息，因此需要将这些信息进一步整理。  \n5. 进入循环。  \n6. 每一条日志会返回最后一次尝试的日志以及重试次数。  \n7. 循环上述操作，直到清洗完所有日志。  \n8. 返回一个字典类型，类似于以下：  \n```python\nuser_log = {",
+        "score": 0.25
+      }
+    ],
+    "agent_answer": "根据知识库中的文档，智能抢课系统的登录方式和抢课码的作用如下：\n\n---\n\n## 一、支持的登录方式\n\n智能抢课系统支持 **两种登录方式**（来源：`introduce.md` - \"普通用户如何使用\"章节）：\n\n### 方式一：账号密码登录\n用户传入自己的教务系统**账号和密码**，系统自动完成选课参数获取和选课操作。这是最常用的方式。\n\n### 方式二：抢课码登录（无需账号密码）\n如果你不想泄露自己的密码，系统提供了**不用密码的抢课渠道**（来源：`introduce.md` - \"它有什么特点\"第6点）。使用此方式时，需要提前**联系网站管理员**获取抢课码。\n\n> 提示：在操作界面的\"登录方式\"中，如果你想使用第二种方式（抢课码），建议提前联系网站管理员进行配置。\n\n---\n\n## 二、抢课码的作用\n\n从文档中可以总结出抢课码的 **两个主要作用**：\n\n1. **作为免密登录凭证**：在不使用账号密码的情况下，凭抢课码即可提交选课任务（来源：`introduce.md` - \"普通用户如何使用\"章节）。\n\n2. **查询选课进度**：抢课码对应一个唯一的**抢课码ID（fuel_id）**，用户提交选课任务后，可以通过抢课码来查询自己的选课进度和日志信息（来源：`cache.md` 文档说明）。\n\n> 抢课码需联系管理员获取，普通用户无法自行生成。"
+  },
+  {
+    "index": 19,
+    "question": "如何手动调用课程选择器？SimpleSelectorPerformer 如何使用？",
+    "ground_truth": "手动调用课程选择器的标准方法：使用异步上下文管理器创建选择器对象，调用 update_selector_info 更新课程信息，再调用 select 方法执行选课。示例代码：async with AsyncPCSelector(args, kwargs) as selector: await selector.update_selector_info(args, kwargs); await selector.select()。SimpleSelectorPerformer 是简单选择器执行器，被称为'迷你智能抢课系统'，只需传入用户名、密码、选择器类、意向课程列表即可。使用方式：performer = SimpleSelectorPerformer(username, password, AsyncPESelector, goals); performer.perform()。注意选择器类不需要加括号，且主机需要安装 Redis 环境。",
+    "ideal_contexts": [
+      "手动调用：async with AsyncPCSelector(args, kwargs) as selector: await selector.update_selector_info(...); await selector.select()",
+      "SimpleSelectorPerformer：简单选择器执行器，'迷你智能抢课系统'，自动调用选择器并输出日志。",
+      "使用示例：performer = SimpleSelectorPerformer(username, password, AsyncPESelector, goals); performer.perform()",
+      "选择器类不需要加括号，主机需要安装 Redis 环境。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/selector.md",
+        "section": "课程选择器执行器文件",
+        "subsection": "",
+        "content": "打开这个文件，里面编写了一个异步函数和一个简单课程选择器执行器：  \n1. `async_selector_performer`  \n异步选择器执行器，它是智能抢课系统专门的选择器执行器。它除了能自动调用课程选择器外，还包含了一系列的数据库操作、邮件发送操作等等。  \n因此普通调用者请不要以它作为你的课程选择器执行器。  \n2. `SimpleSelectorPerformer`  \n简单选择器执行器，我们可以把它看作是一个“迷你智能抢课系统”，它除了能帮你调用选择器外，还能在调用期间不断输出选课日志，并且你只需要像你平常编写 Python 代码那样调用它就行了。  \n下面是一个简单的例子：  \n```python\nfrom snatcher.selector import SimpleSelectorPerformer, AsyncPESelector",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/selector.md",
+        "section": "异步选择器文件",
+        "subsection": "手动调用课程选择器",
+        "content": "如果你想手动调用它们，你可以这样做：  \n```python\nimport asyncio\nfrom snatcher.selector import AsyncPCSelector\n\nasync def main():\nasync with AsyncPCSelector(args, kwargs) as selector:\nawait selector.update_selector_info(args, kwargs)\nawait selector.select()\n\nasyncio.run(main())\n```  \n手动调用选择器可能是一个较为复杂的操作。因此系统内部定义了课程选择器执行器，我们可以将课程选择器交给执行器来调用。让我们接着往下看。",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/introduce.md",
+        "section": "它有什么特点？",
+        "subsection": "",
+        "content": "2. **支持提前提交选课任务**  \n即使还没到选课时间，你也可以在系统上提交选课任务，因为系统内部会自动判断当前时间是否是选课时间。  \n3. **支持查询选课进度**  \n当你在系统上提交了你的选课申请，那么当选课开始时，系统内部会记录每一步选课动作，你可以通过系统提供的接口来查询你的选课进度。  \n4. **后台可监听所有选课任务进度**  \n这个功能对于网站管理员来说是尤为重要的，系统管理员可以以一个上帝视角去实时查看所有的选课进度。  \n5. **显示课程的已选择人数**  \n如果你急切地想看到意向课程的选课情况，并且又进不去教务系统。那么不用担心，系统内部会每隔一段时间从教务系统中获取课程的已选择人数，并展示到系统的相关页面。  \n6. **不使用账号密码也能选课**  \n如果你不想泄露你的密码，那么抢课系统也提供了一个不用密码的抢课渠道。",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/introduce.md",
+        "section": "快速上手",
+        "subsection": "调用系统工具",
+        "content": "- **goals**：你的意向课程列表，每一个列表元素都是一个由 (课程名字、课程号ID、教学班ID) 构成的三元组。课程选择器会**按顺序**的尝试选择每一个课程，假如第一个课程失败了，那么它会尝试后面的课程，直到列表遍历完毕……\n- **username**：你的学号。\n- **password**：你的密码。\n- **performer**：执行器的实例化对象。注意，传入的 `AsyncPESelector` **课程选择器不需要加括号**❗并且**不要尝试手动调用课程选择器**❗除非你对其内部原理足够了解。\n- **performer.perform()**：调用内部方法并执行选课逻辑。  \n执行上述代码会发生什么？  \n1. 自动模拟登录并保存登录状态。\n2. 自动执行选课逻辑。\n3. 期间会连接 `Redis` 并不断输出日志信息。",
+        "score": 0.25
+      },
+      {
+        "source": "snatcher/selector.md",
+        "section": "异步选择器文件",
+        "subsection": "",
+        "content": "打开这个文件，你将会看到 3 个非常重要的类：  \n1. `AsyncCourseSelector`  \n异步课程选择器，它是 `BaseCourseSelector` 类的一个派生类。它实现了异步选择器的公用方法，比如 `select`、`set_jxb_ids`等，这些方法的逻辑都是一成不变的，因此为了提高代码复用性，这里统一写在同一个父类中。  \n2. `AsyncPCSelector`  \n异步公选课课程选择器，专门实现公选课选课逻辑。  \n3. `AsyncPESelector`  \n异步体育课课程选择器，专门实现体育课选课逻辑。  \n因此在这么多的选择器中，外部调用者应该调用的是后两个选择器，因为只有它们才实现了完整的选课逻辑，它们的父类或祖先类都是为了让子类能更好的实现相应的逻辑而作出的抽象和封装。",
+        "score": 0.2
+      }
+    ],
+    "agent_answer": "## 1️⃣ 关于手动调用课程选择器\n\n**⚠️ 官方明确建议：不要尝试手动调用课程选择器！**\n\n根据文档的说明（来源：`snatcher/introduce.md` — 快速上手 / 调用系统工具）：\n\n> **\"不要尝试手动调用课程选择器，除非你对其内部原理足够了解。\"**\n\n原因如下：\n- 课程选择器类包含了 **30 多个属性**，创建开销非常大（来源：`snatcher/selector.md` — 课程选择器基类文件）\n- 手动调用容易出错，内部涉及复杂的异步逻辑、请求参数构造等\n\n如果你需要选课，正确的做法是使用 **执行器（Performer）** 来间接调用课程选择器。\n\n---\n\n## 2️⃣ SimpleSelectorPerformer 如何使用\n\n`SimpleSelectorPerformer` 是一个**简单选择器执行器**，可以看作是 **\"迷你智能抢课系统\"**，它会帮你自动调用课程选择器，并在调用期间不断输出选课日志。\n\n### 使用示例\n\n```python\nfrom snatcher.selector import SimpleSelectorPerformer, AsyncPESelector\n\n# 定义意向课程列表（三元组：课程名、课程号ID、教学班ID）\ngoals = [\n    (\"篮球\", \"1001\", \"B001\"),\n    (\"足球\", \"1002\", \"B002\"),\n]\n\n# 实例化执行器\nperformer = SimpleSelectorPerformer(\n    username=\"你的学号\",\n    password=\"你的密码\",\n    course_selector_class=AsyncPESelector,  # ⚠️ 注意：类名不加括号！\n    goals=goals\n)\n\n# 执行选课\nperformer.perform()\n```\n\n### 参数说明\n\n| 参数 | 说明 |\n|------|------|\n| `username` | 你的学号 |\n| `password` | 你的密码 |\n| `course_selector_class` | 课程选择器**类**（不要加括号实例化），如体育课用 `AsyncPESelector`，公选课用 `AsyncPCSelector` |\n| `goals` | 意向课程列表，每个元素为 `(课程名字, 课程号ID, 教学班ID)` 三元组，选择器会**按顺序**尝试选课 |\n\n### 执行流程\n\n调用 `performer.perform()` 后，系统会自动：\n1. ✅ 模拟登录并保存登录状态\n2. ✅ 自动执行选课逻辑\n3. ✅ 连接 `Redis` 并不断输出选课日志\n\n### ⚠️ 注意事项\n\n- 请确保运行代码的主机**已安装好 Redis 环境**，否则会引发异常\n- `AsyncPESelector` 传入时**不需要加括号**（即传类本身，而非实例对象）\n- 即使课程选择器是异步的，`SimpleSelectorPerformer` 内部会自动处理，你可以以同步方式调用\n\n---\n\n**总结**：不要自己手动调用课程选择器，直接用 `SimpleSelectorPerformer` 作为你的选课入口即可，简单又安全。"
+  },
+  {
+    "index": 20,
+    "question": "Arq 框架的延时任务是如何实现的？选课任务的生产-消费流程是怎样的？",
+    "ground_truth": "Arq 基于 Redis 的有序集合（zset）实现延时任务队列——以时间戳作为集合的权重，循环判断时间戳是否到达预定时间，到达则执行任务。选课任务的生产-消费流程：(1) 后端调用 select_course 函数，先提前模拟登录并保存登录信息，再发送一个延时选课任务到队列；(2) 到达预定时间后 select_course_task 任务被触发，根据任务类型获取对应的课程选择器，将参数传给选择器执行器执行选课逻辑；(3) 期间任意关键步骤失败会记录失败信息并重试，最大重试 3 次，超过则判定选课失败。此外还有定时任务 query_selected_number_task 轮询查询课程的已选择人数，保存到缓存中供前端展示。",
+    "ideal_contexts": [
+      "arq 基于 Redis 的有序集合（zset）实现延时任务队列，以时间戳作为权重，循环判断时间戳是否到达预定时间。",
+      "select_course：Arq 任务，由后端调用，提前模拟登录并发送延时选课任务。",
+      "select_course_task：Arq 任务，根据任务类型获取选择器，由执行器执行选课逻辑。",
+      "query_selected_number_task：定时任务，轮询查询课程已选择人数，保存到缓存。",
+      "失败后重试，最大重试次数 3 次，超过则判定选课失败。"
+    ],
+    "actual_retrieval": [
+      {
+        "source": "snatcher/schedule.md",
+        "section": "如何实现并发？",
+        "subsection": "",
+        "content": "由于选课是 IO 密集型任务，因此使用多线程来实现并发是最为合适的。但是，一旦当选课任务多起来，比如有 100 多个选课任务，那么我是不是应该也创建 100 多个线程呢？  \n其实线程不是越多越好，创建过多的线程还会导致任务执行效率低下。因为多个线程之间需要不断地切换上下文，而切换上下文的过程是较为耗时的，所以多线程的创建也是一个难题。  \n3. **协程**  \n协程是一种轻量级线程。下面是协程和线程间的区别：  \n- **线程处在操作系统中的内核态，而协程则处在用户态。**\n- **线程必须由操作系统调度，而协程完全由用户调度。**\n- **线程上下文间的切换较慢，而协程上下文间的切换较快。**  \n也就是说，协程是比线程更小的执行单位，而且一个协程就能实现并发，这是协程非常重要的特性。  \n有关协程的工作原理可以自行在网上查阅相关资料，这里就详细展开说明了……",
+        "score": 0.5
+      },
+      {
+        "source": "snatcher/schedule.md",
+        "section": "并发框架的选择",
+        "subsection": "",
+        "content": "这个框架实现多任务的方式完全基于 Python 原生协程，按理说它是最适合本项目的。  \n但是，由于它使用起来较为复杂，并且不支持一些我想要的功能，所以我还是没有选择它。  \n4. ……  \n选择消息队列框架的过程是一个漫长且头疼的过程，并且在很多常见消息队列框架中都不支持协程函数。  \n但我还是在 GitHub 这个强大的开源社区中找到了我意向中的框架：[https://github.com/python-arq/arq](https://github.com/python-arq/arq)  \n这个框架完全基于 Redis 来实现消息队列，并且它完全使用 Python 协程来实现并发，还支持定时任务、延时任务、任务重试等消息队列基本功能，并且它是一个轻量级框架。  \n> [!note|label:延时任务队列]\n>",
+        "score": 0.3333
+      },
+      {
+        "source": "snatcher/introduce.md",
+        "section": "系统设计思路",
+        "subsection": "",
+        "content": "+ ### 系统调用原理  \n![](images/snatcher-sys.png)  \n+ ### 核心功能设计  \n![](images/framework.png)  \n在这里简单描述一下：  \n1. 在选课 API 被调用之前，系统会提前挂起一个的任务队列进程，该进程用于监听选课 API 提交的任务。\n2. 在 API 被调用之后，`Arq-Worker`会监听到有任务被提交，于是将任务从队列中取出。\n3. 当任务被取出之后，假如任务类型是`select_course`，那么首先会检查`Redis`中是否包含用户对应的会话。如果没有，系统会主动地去保存会话（如果会话设置失败，任务会直接结束）。接着获取选课的时间，最后将选课任务再次发送到任务队列。\n4. 当到达任务设定的时间之后，`Arq-Worker`会不断的从任务队列中取出并执行任务。",
+        "score": 0.25
+      },
+      {
+        "source": "snatcher/introduce.md",
+        "section": "它有什么特点？",
+        "subsection": "",
+        "content": "2. **支持提前提交选课任务**  \n即使还没到选课时间，你也可以在系统上提交选课任务，因为系统内部会自动判断当前时间是否是选课时间。  \n3. **支持查询选课进度**  \n当你在系统上提交了你的选课申请，那么当选课开始时，系统内部会记录每一步选课动作，你可以通过系统提供的接口来查询你的选课进度。  \n4. **后台可监听所有选课任务进度**  \n这个功能对于网站管理员来说是尤为重要的，系统管理员可以以一个上帝视角去实时查看所有的选课进度。  \n5. **显示课程的已选择人数**  \n如果你急切地想看到意向课程的选课情况，并且又进不去教务系统。那么不用担心，系统内部会每隔一段时间从教务系统中获取课程的已选择人数，并展示到系统的相关页面。  \n6. **不使用账号密码也能选课**  \n如果你不想泄露你的密码，那么抢课系统也提供了一个不用密码的抢课渠道。",
+        "score": 0.2
+      },
+      {
+        "source": "snatcher/schedule.md",
+        "section": "模块说明",
+        "subsection": "",
+        "content": "这个模块位于：`/snatcher/aiotasks.py`下。  \n这个模块下有 4 个函数或类：  \n1. `select_course_task`  \n选课任务，它是一个 Arq 任务，会被延时执行。  \n它根据传入的任务类型获取对应的课程选择器，再将参数传给选择器执行器，再有由执行器来执行选课逻辑。  \n2. `select_course`  \n它也是一个 Arq 任务，但他不是选课任务，它是选课任务的生产者，由后端调用。  \n它在执行时就将当前学号提前模拟登录并保存登录信息，最后发送一个延时选课任务。  \n3. `query_selected_number_task`  \n一个定时任务，专门用于轮询查询指定课程类型课程的已选择人数，并保存到缓存中。后端再读取缓存中的数据，返回给前端。  \n4. `WorkerSettings`",
+        "score": 0.1667
+      }
+    ],
+    "agent_answer": "## Arq 框架的延时任务实现\n\nArq（[https://github.com/python-arq/arq](https://github.com/python-arq/arq)）是一个**基于 Redis 的轻量级 Python 协程任务队列框架**，其**延时任务是基于 Redis 的有序集合（zset）实现的**。\n\n**实现原理**（来源：`snatcher/schedule.md > 并发框架的选择`）：\n\n> 以时间戳作为集合的权重（score），循环判断时间戳是否到达预定时间，若是达到了预定时间，那么就执行任务。\n\n简单来说就是：\n1. 将任务的**预定执行时间**转换为时间戳，作为 Redis zset 的 **score（权重）**\n2. Arq-Worker 持续轮询该 zset\n3. 当当前时间戳 ≥ 任务的时间戳时，取出该任务并执行\n\n此外，Arq 还支持**定时任务**、**任务重试**等常规消息队列功能，且完全使用 Python 协程实现并发。\n\n---\n\n## 选课任务的生产-消费流程\n\n根据知识库文档（来源：`snatcher/introduce.md > 系统设计思路` 和 `snatcher/schedule.md > 模块说明`），选课任务的生产-消费流程如下：\n\n### 🏭 生产者\n\n**`select_course` 函数**（位于 `/snatcher/aiotasks.py`）—— 由后端 API 调用\n\n- 它是一个 Arq 任务，但**本身不是选课任务，而是选课任务的生产者**\n- 执行时：将当前学号提前**模拟登录**并**保存登录信息**\n- 最后**发送一个延时选课任务**（即 `select_course_task`）到任务队列\n\n### 🛠️ 消费者（Arq-Worker）\n\n**核心流程步骤**：\n\n| 步骤 | 说明 |\n|------|------|\n| **Step 1** | 系统提前挂起一个 **Arq-Worker 进程**，持续监听任务队列（来源：`snatcher/introduce.md`） |\n| **Step 2** | API 被调用后，Arq-Worker 监听到有任务提交，将任务从队列中取出 |\n| **Step 3** | 若任务类型是 `select_course`（生产者任务），则：① 检查 Redis 中是否有用户会话 → ② 没有则主动保存会话（失败则结束）→ ③ 获取选课时间 → ④ 将**真正的选课任务再次发送到任务队列**（即投递一个延时任务） |\n| **Step 4** | **到达设定的选课时间后**，Arq-Worker 不断从队列中取出并执行任务 |\n| **Step 5** | 任务执行时调用**课程选择器**（本质是爬虫程序）进行选课操作，任意关键步骤失败会记录并**重试**（最多 3 次） |\n| **Step 6** | 任务执行完毕 |\n\n### 📋 模块中的核心函数\n\n| 函数 | 角色 | 说明 |\n|------|------|------|\n| `select_course` | **生产者** | 由后端调用，提前登录并保存会话，然后投递延时选课任务 |\n| `select_course_task` | **消费者（实际选课）** | 被延时执行，根据任务类型获取课程选择器，由执行器执行选课逻辑 |\n| `query_selected_number_task` | **定时任务** | 定时轮询查询课程已选择人数，保存到缓存供前端展示 |\n\n### 🎯 整体流程图（简化版）\n\n```\n用户调用 API\n     ↓\nselect_course（生产者）→ 模拟登录保存会话 → 投递延时选课任务\n     ↓\nArq-Worker 接收任务 → 检查会话 → 获取选课时间 → 再次入队（定时）\n     ↓\n到达选课时间 → Arq-Worker 取出任务 → 课程选择器执行选课 → 失败重试（最多3次）\n     ↓\n选课完成\n```\n\n---\n\n**总结**：Arq 的延时任务底层基于 Redis zset（时间戳作为权重）实现，而选课任务通过 **\"生产者→投递延时任务→Worker 定时取出执行\"** 的经典消息队列模式，实现了**提前提交、到点自动选课**的功能。"
+  }
+]
