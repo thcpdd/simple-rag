@@ -16,11 +16,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.core.config import settings
 from app.core.database import get_db
 from app.models.session import Session as SessionModel
 from app.models.user import User
 from app.schemas.chat import ChatInvokeRequest, ChatInvokeResponse, ChatStopRequest
 from app.services import chat_task_manager
+from app.services.daily_usage import check_and_increment
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +43,9 @@ async def invoke_chat(
     # 校验提问长度
     if len(req.query) > 500:
         raise HTTPException(status_code=400, detail="提问长度不能超过500字")
+
+    # 每日调用频率限制
+    await check_and_increment(current_user.id, settings.chat_daily_limit)
 
     if req.thread_id:
         # 续接已有会话：校验会话属于当前用户，不创建新记录

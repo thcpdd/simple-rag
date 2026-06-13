@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     app_port: int = Field(default=7500)
     debug: bool = Field(default=False)
 
+    # ========== 调用频率限制 ==========
+    chat_daily_limit: int = Field(
+        default=100, description="每个用户每日 chat 调用上限"
+    )
+
     knowledge_base_dir: str = Field(
         default="",
         description="知识库文档根目录路径。为空时自动推断",
