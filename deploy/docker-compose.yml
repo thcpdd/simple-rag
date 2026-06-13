@@ -1,3 +1,5 @@
+name: simplerag-compose
+
 services:
   # ============================================
   # MySQL 数据库
@@ -64,9 +66,9 @@ services:
     ports:
       - "${API_PORT:-7500}:7500"
     volumes:
-      - ../backend/app:/app/app
-      - ../backend/main.py:/app/main.py
-      - ../backend/.env:/app/.env:ro
+      - ../backend/app:/app/backend/app
+      - ../backend/main.py:/app/backend/main.py
+      - ../backend/.env:/app/backend/.env:ro
       - ../knowledges:/app/knowledges
     env_file:
       - ../backend/.env

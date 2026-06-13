@@ -4,9 +4,6 @@
 # Vite + React 静态 SPA，使用 Nginx 承载
 # ============================================
 
-LABEL maintainer="SimpleRAG Team"
-LABEL description="SimpleRAG Web UI - Vite + React Chat Interface"
-
 # ============================================
 # Stage 1: Dependencies
 # ============================================

@@ -3,9 +3,6 @@
 # 多阶段构建 (Builder → Runtime)
 # ============================================
 
-LABEL maintainer="SimpleRAG Team"
-LABEL description="SimpleRAG API - FastAPI + LangGraph RAG Service"
-
 # ============================================
 # Stage 1: Builder
 # ============================================
@@ -20,12 +17,12 @@ RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debia
 RUN curl -LsSf https://uv.agentsmirror.com/install-cn.sh | sh && \
     mv /root/.local/bin/uv /usr/local/bin/uv
 
-COPY backend/pyproject.toml backend/uv.lock backend/README.md ./
+COPY backend/pyproject.toml backend/uv.lock backend/README.md ./backend/
 
-COPY backend/app ./app
-COPY backend/main.py .
+COPY backend/app ./backend/app
+COPY backend/main.py ./backend/
 
-RUN uv sync --frozen
+RUN uv sync --frozen --directory backend
 
 # ============================================
 # Stage 2: Runtime
@@ -36,7 +33,7 @@ WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PATH="/app/.venv/bin:$PATH"
+    PATH="/app/backend/.venv/bin:$PATH"
 
 RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
     apt-get update && apt-get install -y --no-install-recommends \
@@ -49,4 +46,4 @@ EXPOSE 7500
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:7500/health || exit 1
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7500"]
+CMD ["uvicorn", "main:app", "--app-dir", "/app/backend", "--host", "0.0.0.0", "--port", "7500"]
