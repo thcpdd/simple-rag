@@ -286,7 +286,7 @@ export default function KnowledgePage() {
     if (!deleteKb) return
     setDeletingKb(true)
     try {
-      const result = await api.delete<{ message: string; deleted_docs: number }>(`/knowledge/bases/${deleteKb.id}`)
+      await api.delete(`/knowledge/bases/${deleteKb.id}`)
       setDeleteKb(null)
       loadBases()
       // 如果当前选中的就是被删除的知识库，重置筛选
